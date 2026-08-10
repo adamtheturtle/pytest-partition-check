@@ -68,8 +68,8 @@ optional-dependencies.dev = [
     "zizmor==1.29.0",
 ]
 optional-dependencies.release = [ "check-wheel-contents==0.6.3", "towncrier==25.8.0" ]
-urls.Changelog = "https://github.com/VWS-Python/pytest-partition-check/blob/main/CHANGELOG.rst"
-urls.Source = "https://github.com/VWS-Python/pytest-partition-check"
+urls.Changelog = "https://github.com/adamtheturtle/pytest-partition-check/blob/main/CHANGELOG.rst"
+urls.Source = "https://github.com/adamtheturtle/pytest-partition-check"
 scripts.check-partition = "pytest_partition_check.cli:main"
 entry-points.pytest11.pytest_partition_check = "pytest_partition_check.plugin"
 
