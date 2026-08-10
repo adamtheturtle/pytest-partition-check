@@ -1,0 +1,7 @@
+addopts
+beartype
+nodeid
+PyPI
+pytest
+rootdir
+xdist

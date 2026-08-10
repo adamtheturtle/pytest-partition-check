@@ -1,0 +1,9 @@
+include src/pytest_partition_check/py.typed
+global-exclude *.py[cod]
+prune .pytest_cache
+prune .ruff_cache
+prune .mypy_cache
+prune build
+prune dist
+exclude .coverage
+exclude uv.lock

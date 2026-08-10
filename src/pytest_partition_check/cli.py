@@ -1,0 +1,40 @@
+"""Standalone command-line interface."""
+
+from __future__ import annotations
+
+import argparse
+from pathlib import Path
+
+from beartype import beartype
+
+from pytest_partition_check import PartitionError, check_partition
+
+
+@beartype
+def main() -> None:
+    """Run the partition check and exit non-zero when it fails."""
+    parser = argparse.ArgumentParser()
+    parser.add_argument("patterns", nargs="*")
+    parser.add_argument("--partition-patterns-path", type=Path)
+    parser.add_argument("--rootdir", type=Path)
+    parser.add_argument("-p", "--disable-plugin", action="append", default=[])
+    parser.add_argument("--extra-arg", action="append", default=[])
+    arguments = parser.parse_args()
+    patterns = list(arguments.patterns)
+    if arguments.partition_patterns_path is not None:
+        patterns.extend(
+            line.strip()
+            for line in arguments.partition_patterns_path.read_text(
+                encoding="utf-8"
+            ).splitlines()
+            if line.strip() and not line.lstrip().startswith("#")
+        )
+    try:
+        check_partition(
+            patterns=patterns,
+            rootdir=arguments.rootdir,
+            disable_plugins=arguments.disable_plugin,
+            extra_args=arguments.extra_arg,
+        )
+    except PartitionError as error:
+        parser.exit(status=1, message=f"{error}\n")

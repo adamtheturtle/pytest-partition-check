@@ -1,0 +1,92 @@
+"""Tests for the standalone command-line interface."""
+
+import sys
+from pathlib import Path
+
+import pytest
+
+from pytest_partition_check import PartitionError
+from pytest_partition_check.cli import main
+
+
+def _write_suite(*, root: Path, filename: str) -> None:
+    """Write a small suite for CLI testing."""
+    (root / filename).write_text(
+        data="def test_one():\n    pass\n\ndef test_two():\n    pass\n",
+        encoding="utf-8",
+    )
+
+
+def test_cli_success(
+    *, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """The CLI returns normally for a valid partition."""
+    filename = "test_cli_success_sample.py"
+    _write_suite(root=tmp_path, filename=filename)
+    monkeypatch.setattr(
+        target=sys,
+        name="argv",
+        value=[
+            "check-partition",
+            "--rootdir",
+            str(object=tmp_path),
+            filename,
+        ],
+    )
+    main()
+
+
+def test_cli_failure(
+    *, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """The CLI exits one and prints the shared report on failure."""
+    filename = "test_cli_failure_sample.py"
+    _write_suite(root=tmp_path, filename=filename)
+    monkeypatch.setattr(
+        target=sys,
+        name="argv",
+        value=[
+            "check-partition",
+            "--rootdir",
+            str(object=tmp_path),
+            f"{filename}::test_one",
+        ],
+    )
+    with pytest.raises(expected_exception=SystemExit, match="1"):
+        main()
+
+
+def test_cli_patterns_file(
+    *, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """The CLI reads a committed patterns file and accepts extra options."""
+    filename = "test_cli_file_sample.py"
+    _write_suite(root=tmp_path, filename=filename)
+    patterns = tmp_path / "patterns"
+    patterns.write_text(data=f"# shard list\n\n{filename}\n", encoding="utf-8")
+    monkeypatch.setattr(
+        target=sys,
+        name="argv",
+        value=[
+            "check-partition",
+            "--rootdir",
+            str(object=tmp_path),
+            "--partition-patterns-path",
+            str(object=patterns),
+            "--disable-plugin",
+            "retry",
+            "--extra-arg=--disable-warnings",
+        ],
+    )
+    main()
+
+
+def test_empty_partition_error_message() -> None:
+    """Empty structured sections render explicit stable placeholders."""
+    section_count = 3
+    error = PartitionError(
+        unmatched_patterns=frozenset(),
+        overlapping={},
+        uncollected=frozenset(),
+    )
+    assert str(object=error).count("  (none)") == section_count

@@ -1,0 +1,267 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = [
+    "setuptools",
+    "setuptools-scm>=8.1.0",
+]
+
+[project]
+name = "pytest-partition-check"
+description = "Verify that pytest node-ID patterns partition a test suite."
+readme = { file = "README.rst", content-type = "text/x-rst" }
+keywords = [ "ci", "partition", "pytest", "sharding", "testing" ]
+license = "MIT"
+authors = [ { name = "Adam Dangoor", email = "adamdangoor@gmail.com" } ]
+requires-python = ">=3.10"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Framework :: Pytest",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Software Development :: Testing",
+]
+dynamic = [ "version" ]
+dependencies = [
+    "beartype>=0.22.9",
+    "pytest>=8",
+]
+optional-dependencies.dev = [
+    "actionlint-py==1.7.12.24",
+    "check-manifest==0.51",
+    "check-wheel-contents==0.6.3",
+    "coverage==7.15.4",
+    "deptry==0.25.1",
+    "doc8==2.0.0",
+    "doccmd==2026.7.19; python_version >= '3.11'",
+    "interrogate==1.7.0",
+    "mypy[faster-cache]==2.3.0",
+    "mypy-strict-kwargs==2026.7.19.1; python_version >= '3.11'",
+    "no-defaults==1.1.0; python_version >= '3.11'",
+    "prek==0.4.12",
+    "pydocstringformatter==1.0.0; python_version >= '3.11'",
+    "pydocstyle==6.3",
+    "pylint[spelling]==4.0.6",
+    "pylint-per-file-ignores==3.2.1",
+    "pyproject-fmt==2.27.0",
+    "pyrefly==1.2.0",
+    "pyright==1.1.411",
+    "pyroma==5.0.1",
+    "pytest==9.1.1",
+    "pytest-split==0.11.0",
+    "pytest-xdist==3.8.0",
+    "pyyaml==6.0.3",
+    "ruff==0.16.1",
+    "shellcheck-py==0.11.0.1",
+    "shfmt-py==4.0.0",
+    "sphinx-lint==1.0.2",
+    "strict-kwargs==2026.7.24; python_version >= '3.11'",
+    "towncrier==25.8.0",
+    "ty==0.0.69",
+    "vale==3.13.0.0",
+    "vulture==2.16",
+    "yamlfix==1.19.1",
+    "zizmor==1.29.0",
+]
+optional-dependencies.release = [ "check-wheel-contents==0.6.3", "towncrier==25.8.0" ]
+scripts.check-partition = "pytest_partition_check.cli:main"
+entry-points.pytest11.pytest_partition_check = "pytest_partition_check.plugin"
+urls.Changelog = "https://github.com/VWS-Python/pytest-partition-check/blob/main/CHANGELOG.rst"
+urls.Source = "https://github.com/VWS-Python/pytest-partition-check"
+
+[dependency-groups]
+dev = []
+
+[tool.setuptools]
+packages.find.where = [ "src" ]
+package-data.pytest_partition_check = [ "py.typed" ]
+zip-safe = false
+
+[tool.setuptools_scm]
+version_scheme = "post-release"
+fallback_version = "0.0.0"
+
+[tool.ruff]
+line-length = 79
+lint.select = [ "ALL" ]
+lint.ignore = [
+    "COM812",
+    "CPY001",
+    "D205",
+    "D212",
+    "D415",
+    "ISC001",
+    "PLR0913",
+    "TC001",
+    "TC002",
+    "TC003",
+]
+lint.per-file-ignores."tests/**" = [ "S101" ]
+lint.unfixable = [ "ERA001" ]
+lint.external = [ "NOD" ]
+lint.flake8-tidy-imports.banned-api."typing.cast".msg = "typing.cast is banned: use explicit type narrowing or a typed variable instead."
+lint.pydocstyle.convention = "google"
+
+[tool.pylint]
+"MESSAGES CONTROL".disable = [
+    "duplicate-code",
+    "line-too-long",
+    "locally-disabled",
+    "missing-return-type-doc",
+    "missing-type-doc",
+    "too-few-public-methods",
+    "too-many-arguments",
+    "too-many-instance-attributes",
+    "too-many-lines",
+    "too-many-locals",
+    "ungrouped-imports",
+    "unused-import",
+    "wrong-import-order",
+]
+"MESSAGES CONTROL".enable = [
+    "bad-inline-option",
+    "deprecated-pragma",
+    "file-ignored",
+    "spelling",
+    "use-symbolic-message-instead",
+    "useless-suppression",
+]
+DEPRECATED_BUILTINS.bad-functions = [ "filter", "getattr", "hasattr", "map", "setattr" ]
+FORMAT.single-line-if-stmt = false
+MAIN.fail-on = [ "useless-suppression" ]
+MASTER.jobs = 0
+MASTER.load-plugins = [
+    "pylint.extensions.bad_builtin",
+    "pylint.extensions.comparison_placement",
+    "pylint.extensions.consider_refactoring_into_while_condition",
+    "pylint.extensions.docparams",
+    "pylint.extensions.dunder",
+    "pylint.extensions.eq_without_hash",
+    "pylint.extensions.for_any_all",
+    "pylint.extensions.mccabe",
+    "pylint.extensions.no_self_use",
+    "pylint.extensions.overlapping_exceptions",
+    "pylint.extensions.private_import",
+    "pylint.extensions.redefined_loop_name",
+    "pylint.extensions.redefined_variable_type",
+    "pylint.extensions.set_membership",
+    "pylint.extensions.typing",
+    "pylint_per_file_ignores",
+]
+MASTER.persistent = true
+MASTER.unsafe-load-any-extension = false
+SPELLING.spelling-dict = "en_US"
+SPELLING.spelling-private-dict-file = "spelling_private_dict.txt"
+SPELLING.spelling-store-unknown-words = "no"
+
+[tool.interrogate]
+fail-under = 100
+verbose = 2
+omit-covered-files = true
+
+[tool.check-manifest]
+ignore = [
+    ".git_archival.txt",
+    ".prettierrc",
+    ".vale.ini",
+    "CHANGELOG.rst",
+    "CODE_OF_CONDUCT.rst",
+    "docs",
+    "docs/**",
+    "LICENSE",
+    "newsfragments",
+    "newsfragments/**",
+    "spelling_private_dict.txt",
+    "tests",
+    "tests/**",
+]
+
+[tool.deptry]
+optional_dependencies_dev_groups = [ "dev", "release" ]
+
+[tool.vulture]
+exclude = [ ".venv" ]
+ignore_names = [
+    "pytest_addoption",
+    "pytest_collection_finish",
+    "pytest_plugins",
+    "pytest_sessionfinish",
+    "pytest_terminal_summary",
+]
+
+[tool.pyproject-fmt]
+indent = 4
+keep_full_version = true
+max_supported_python = "3.14"
+
+[tool.mypy]
+files = [ "." ]
+exclude = [ "build" ]
+follow_untyped_imports = true
+strict = true
+plugins = [ "mypy_strict_kwargs" ]
+
+[tool.pyrefly]
+search_path = [ ".", "src" ]
+errors.non-exhaustive-match = "error"
+
+[tool.pyright]
+typeCheckingMode = "strict"
+enableTypeIgnoreComments = false
+reportUnnecessaryTypeIgnoreComment = true
+
+[tool.pytest]
+addopts = [ "--strict-markers" ]
+cumulative_timing = false
+log_cli = true
+xfail_strict = true
+
+[tool.coverage]
+run.branch = true
+run.parallel = true
+run.relative_files = true
+run.source = [ "src/", "tests/" ]
+report.exclude_also = [
+    "case _ as unreachable:\\n\\s*assert_never\\(",
+    "class .*\\bProtocol\\):",
+    "if TYPE_CHECKING:",
+]
+report.fail_under = 100
+report.show_missing = true
+
+[tool.towncrier]
+directory = "newsfragments"
+filename = "CHANGELOG.rst"
+template = "docs/towncrier_template.rst.jinja"
+title_format = "{version}"
+issue_format = "#{issue}"
+underlines = [ "-", "~", "^" ]
+type = [ { directory = "change", name = "", showcontent = true } ]
+
+[tool.pydocstringformatter]
+write = true
+split-summary-body = false
+max-line-length = 75
+linewrap-full-docstring = true
+
+[tool.doc8]
+max_line_length = 2000
+ignore_path = [
+    "./.eggs",
+    "./docs/build",
+    "./node_modules",
+    "./src/*.egg-info/",
+    "./src/*/_setuptools_scm_version.txt",
+]
+
+[tool.yamlfix]
+section_whitelines = 1
+whitelines = 1
+
+[tool.no_defaults]
+private_only = true
+per_file_enforcement."tests/**" = "all"
