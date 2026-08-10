@@ -16,7 +16,6 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: true
-          token: ${{ secrets.RELEASE_PAT }}
       - uses: astral-sh/setup-uv@v9.0.0
       - name: Calculate calendar version
         uses: StephaneBour/actions-calver@master
