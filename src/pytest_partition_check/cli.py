@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import argparse
+import sys
+from collections import Counter
 from pathlib import Path
 
 from beartype import beartype
@@ -16,11 +18,22 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("patterns", nargs="*")
     parser.add_argument("--partition-patterns-path", type=Path)
+    parser.add_argument(
+        "--patterns-stdin",
+        action="store_true",
+        help="Read one partition pattern per line from standard input.",
+    )
     parser.add_argument("--rootdir", type=Path)
     parser.add_argument("-p", "--disable-plugin", action="append", default=[])
     parser.add_argument("--extra-arg", action="append", default=[])
     arguments = parser.parse_args()
     patterns = list(arguments.patterns)
+    if arguments.patterns_stdin:
+        patterns.extend(
+            line.strip()
+            for line in sys.stdin
+            if line.strip() and not line.lstrip().startswith("#")
+        )
     if arguments.partition_patterns_path is not None:
         patterns.extend(
             line.strip()
@@ -28,6 +41,15 @@ def main() -> None:
                 encoding="utf-8"
             ).splitlines()
             if line.strip() and not line.lstrip().startswith("#")
+        )
+    duplicates = sorted(
+        pattern for pattern, count in Counter(patterns).items() if count > 1
+    )
+    if duplicates:
+        formatted = "\n".join(f"  {pattern}" for pattern in duplicates)
+        parser.exit(
+            status=1,
+            message=f"Duplicate partition patterns:\n{formatted}\n",
         )
     try:
         check_partition(

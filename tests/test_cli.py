@@ -1,6 +1,7 @@
 """Tests for the standalone command-line interface."""
 
 import sys
+from io import StringIO
 from pathlib import Path
 
 import pytest
@@ -27,7 +28,7 @@ def test_cli_success(
         target=sys,
         name="argv",
         value=[
-            "check-partition",
+            "pytest-check-partition",
             "--rootdir",
             str(object=tmp_path),
             filename,
@@ -46,7 +47,7 @@ def test_cli_failure(
         target=sys,
         name="argv",
         value=[
-            "check-partition",
+            "pytest-check-partition",
             "--rootdir",
             str(object=tmp_path),
             f"{filename}::test_one",
@@ -70,7 +71,7 @@ def test_cli_patterns_file(
         target=sys,
         name="argv",
         value=[
-            "check-partition",
+            "pytest-check-partition",
             "--rootdir",
             str(object=tmp_path),
             "--partition-patterns-path",
@@ -81,6 +82,45 @@ def test_cli_patterns_file(
         ],
     )
     main()
+
+
+def test_cli_patterns_stdin(
+    *, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """The CLI reads newline-delimited patterns from standard input."""
+    filename = "test_cli_stdin_sample.py"
+    _write_suite(root=tmp_path, filename=filename)
+    monkeypatch.setattr(
+        target=sys,
+        name="argv",
+        value=[
+            "pytest-check-partition",
+            "--rootdir",
+            str(object=tmp_path),
+            "--patterns-stdin",
+        ],
+    )
+    monkeypatch.setattr(
+        target=sys,
+        name="stdin",
+        value=StringIO(initial_value=f"# shard list\n\n{filename}\n"),
+    )
+    main()
+
+
+def test_cli_duplicate_patterns(
+    *, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """The CLI rejects duplicate patterns."""
+    filename = "test_cli_duplicate_sample.py"
+    _write_suite(root=tmp_path, filename=filename)
+    monkeypatch.setattr(
+        target=sys,
+        name="argv",
+        value=["pytest-check-partition", filename, filename],
+    )
+    with pytest.raises(expected_exception=SystemExit, match="1"):
+        main()
 
 
 def test_empty_partition_error_message() -> None:

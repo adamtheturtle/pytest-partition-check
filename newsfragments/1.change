@@ -1,0 +1,2 @@
+Rename the standalone command to ``pytest-check-partition`` and add
+``--patterns-stdin`` for newline-delimited patterns.

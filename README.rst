@@ -60,7 +60,14 @@ option. A standalone check is also available:
 
 .. code-block:: console
 
-   $ check-partition tests/unit tests/integration
+   $ pytest-check-partition tests/unit tests/integration
+
+Patterns can also be read one per line from standard input, which is useful
+when extracting a CI matrix from another configuration file:
+
+.. code-block:: console
+
+   $ generate-patterns | pytest-check-partition --patterns-stdin
 
 Nested pytest collection
 ------------------------
