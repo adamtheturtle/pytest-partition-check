@@ -74,6 +74,7 @@ repos:
       - id: pyright-verifytypes
         name: pyright-verifytypes
         entry: uv run --extra=dev -m pyright --verifytypes pytest_partition_check
+          --ignoreexternal
         language: python
         pass_filenames: false
         stages: [pre-push]

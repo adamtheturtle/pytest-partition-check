@@ -33,9 +33,11 @@ class PartitionError(Exception):
         overlapping: Mapping[str, frozenset[str]],
         uncollected: frozenset[str],
     ) -> None:
-        """Initialize a partition error with structured problem details."""
+        """Initialize a partition error with structured problem
+        details.
+        """
         self.unmatched_patterns = unmatched_patterns
-        self.overlapping = dict(overlapping)
+        self.overlapping: Mapping[str, frozenset[str]] = dict(overlapping)
         self.uncollected = uncollected
         super().__init__()
 
@@ -61,7 +63,9 @@ class PartitionError(Exception):
 
 
 class _CollectionRecorder:
-    """Record the final item list after collection hooks and deselection."""
+    """Record the final item list after collection hooks and
+    deselection.
+    """
 
     def __init__(self) -> None:
         """Initialize an empty recorder."""
@@ -70,7 +74,9 @@ class _CollectionRecorder:
 
     @pytest.hookimpl(trylast=True)
     def pytest_collection_finish(self, session: pytest.Session) -> None:
-        """Record final node IDs after collection modification hooks run."""
+        """Record final node IDs after collection modification hooks
+        run.
+        """
         self.node_ids = frozenset(item.nodeid for item in session.items)
         self.collection_finished = True
 
@@ -83,7 +89,9 @@ def collect_node_ids(
     disable_plugins: Iterable[str] = (),
     extra_args: Iterable[str] = (),
 ) -> frozenset[str]:
-    """Return the node IDs of every test ``pytest`` collects for ``pattern``."""  # noqa: E501
+    """Return the node IDs of every test ``pytest`` collects for
+    ``pattern``.
+    """
     resolved_rootdir = Path.cwd() if rootdir is None else rootdir
     recorder = _CollectionRecorder()
     disabled = dict.fromkeys((*_COLLECTION_MUTATING_PLUGINS, *disable_plugins))
@@ -128,7 +136,9 @@ def check_partition(
     disable_plugins: Iterable[str] = (),
     extra_args: Iterable[str] = (),
 ) -> None:
-    """Raise ``PartitionError`` unless ``patterns`` partition the test suite."""  # noqa: E501
+    """Raise ``PartitionError`` unless ``patterns`` partition the test
+    suite.
+    """
     pattern_list = tuple(patterns)
     disabled = tuple(disable_plugins)
     arguments = tuple(extra_args)

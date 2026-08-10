@@ -59,7 +59,9 @@ def test_cli_failure(
 def test_cli_patterns_file(
     *, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    """The CLI reads a committed patterns file and accepts extra options."""
+    """The CLI reads a committed patterns file and accepts extra
+    options.
+    """
     filename = "test_cli_file_sample.py"
     _write_suite(root=tmp_path, filename=filename)
     patterns = tmp_path / "patterns"

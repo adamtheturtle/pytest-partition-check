@@ -29,7 +29,8 @@ jobs:
       - name: Generate release notes
         env:
           RELEASE: ${{ steps.calver.outputs.release }}
-        run: uv run --extra=release towncrier build --draft --version "$RELEASE" > release-notes.md
+        run: uv run --extra=release towncrier build --draft --version "$RELEASE" >
+          release-notes.md
       - name: Update changelog
         env:
           RELEASE: ${{ steps.calver.outputs.release }}

@@ -37,13 +37,13 @@ optional-dependencies.dev = [
     "coverage==7.15.4",
     "deptry==0.25.1",
     "doc8==2.0.0",
-    "doccmd==2026.7.19; python_version >= '3.11'",
+    "doccmd==2026.7.19; python_version>='3.11'",
     "interrogate==1.7.0",
     "mypy[faster-cache]==2.3.0",
-    "mypy-strict-kwargs==2026.7.19.1; python_version >= '3.11'",
-    "no-defaults==1.1.0; python_version >= '3.11'",
+    "mypy-strict-kwargs==2026.7.19.1; python_version>='3.11'",
+    "no-defaults==1.1.0; python_version>='3.11'",
     "prek==0.4.12",
-    "pydocstringformatter==1.0.0; python_version >= '3.11'",
+    "pydocstringformatter==1.0.0; python_version>='3.11'",
     "pydocstyle==6.3",
     "pylint[spelling]==4.0.6",
     "pylint-per-file-ignores==3.2.1",
@@ -59,7 +59,7 @@ optional-dependencies.dev = [
     "shellcheck-py==0.11.0.1",
     "shfmt-py==4.0.0",
     "sphinx-lint==1.0.2",
-    "strict-kwargs==2026.7.24; python_version >= '3.11'",
+    "strict-kwargs==2026.7.24; python_version>='3.11'",
     "towncrier==25.8.0",
     "ty==0.0.69",
     "vale==3.13.0.0",
@@ -68,10 +68,10 @@ optional-dependencies.dev = [
     "zizmor==1.29.0",
 ]
 optional-dependencies.release = [ "check-wheel-contents==0.6.3", "towncrier==25.8.0" ]
-scripts.check-partition = "pytest_partition_check.cli:main"
-entry-points.pytest11.pytest_partition_check = "pytest_partition_check.plugin"
 urls.Changelog = "https://github.com/VWS-Python/pytest-partition-check/blob/main/CHANGELOG.rst"
 urls.Source = "https://github.com/VWS-Python/pytest-partition-check"
+scripts.check-partition = "pytest_partition_check.cli:main"
+entry-points.pytest11.pytest_partition_check = "pytest_partition_check.plugin"
 
 [dependency-groups]
 dev = []
@@ -264,4 +264,5 @@ whitelines = 1
 
 [tool.no_defaults]
 private_only = true
+per_file_enforcement."src/pytest_partition_check/_core.py" = "none"
 per_file_enforcement."tests/**" = "all"

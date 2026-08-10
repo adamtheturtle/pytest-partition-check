@@ -1,7 +1,9 @@
+CLI
 PyPI
 addopts
 beartype
 nodeid
+pragma
 pytest
 rootdir
 xdist
