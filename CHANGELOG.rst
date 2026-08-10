@@ -3,6 +3,12 @@ Changelog
 
 .. towncrier release notes start
 
+2026.8.10.1
+-----------
+
+- Rename the standalone command to ``pytest-check-partition`` and add
+  ``--patterns-stdin`` for newline-delimited patterns.
+
 2026.08.10
 ----------
 
