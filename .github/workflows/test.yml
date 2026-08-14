@@ -35,3 +35,14 @@ jobs:
           UV_PYTHON: ${{ matrix.python-version }}
       - name: Report coverage
         run: uv run --extra=dev coverage report
+  completion-ci:
+    needs: tests
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Check matrix job status
+        run: |-
+          if ! ${{ needs.tests.result == 'success' }}; then
+            echo "One or more matrix jobs failed"
+            exit 1
+          fi
