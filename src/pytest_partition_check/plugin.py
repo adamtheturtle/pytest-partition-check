@@ -132,11 +132,11 @@ def pytest_sessionfinish(
             extra_args=_extra_args(config=session.config),
         )
     except PartitionError as error:
-        session.config.stash[_PARTITION_ERROR] = str(object=error)
+        session.config.stash[_PARTITION_ERROR] = error
         session.exitstatus = pytest.ExitCode.TESTS_FAILED
 
 
-_PARTITION_ERROR = pytest.StashKey[str]()
+_PARTITION_ERROR = pytest.StashKey[BaseException]()
 
 
 def pytest_terminal_summary(
@@ -144,11 +144,11 @@ def pytest_terminal_summary(
 ) -> None:
     """Show a partition failure in the terminal summary."""
     del exitstatus
-    message = terminalreporter.config.stash.get(
+    error = terminalreporter.config.stash.get(
         key=_PARTITION_ERROR, default=None
     )
-    if message is not None:
+    if error is not None:
         terminalreporter.write_sep(
             sep="=", title="partition check failed", red=True
         )
-        terminalreporter.write_line(line=message, red=True)
+        terminalreporter.write_line(line=str(object=error), red=True)
