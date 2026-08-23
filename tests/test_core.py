@@ -5,11 +5,11 @@ from pathlib import Path
 import pytest
 
 from pytest_partition_check import (
+    NestedPytestError,
     PartitionError,
     check_partition,
     collect_node_ids,
 )
-from pytest_partition_check._core import NestedPytestError
 
 
 def _suite(*, pytester: pytest.Pytester) -> Path:

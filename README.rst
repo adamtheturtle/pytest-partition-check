@@ -92,6 +92,8 @@ Put collection filters needed by the check in ``extra_args`` explicitly. To
 opt out of a default plugin disable, reload it later in the nested argv, for
 example ``extra_args=("-p", "split", "--splits", "2", "--group", "1")``.
 
+Nested collection failures raise ``NestedPytestError``, which is part of the public API alongside ``PartitionError``.
+
 Usage and internal pytest failures are raised loudly. Only pytest's explicit
 ``NO_TESTS_COLLECTED`` result means that a pattern matched nothing.
 
