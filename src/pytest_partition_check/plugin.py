@@ -81,7 +81,7 @@ def pytest_sessionfinish(
         session.exitstatus = pytest.ExitCode.TESTS_FAILED
 
 
-_PARTITION_ERROR = pytest.StashKey[PartitionError]()
+_PARTITION_ERROR = pytest.StashKey[BaseException]()
 
 
 def pytest_terminal_summary(
