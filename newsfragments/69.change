@@ -1,1 +1,0 @@
-Add a test that collection records items after ``pytest_collection_modifyitems``.

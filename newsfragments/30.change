@@ -1,1 +1,0 @@
-Forward ``extra_args`` from the pytest plugin into nested collection.

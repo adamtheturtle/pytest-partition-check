@@ -1,1 +1,0 @@
-Catch ``NestedPytestError`` in the pytest plugin and report it in the terminal summary.

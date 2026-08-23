@@ -1,1 +1,0 @@
-Remove the invalid ``cumulative_timing`` pytest setting and use ``[tool.pytest.ini_options]``.

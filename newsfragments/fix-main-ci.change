@@ -1,1 +1,0 @@
-Fix CI by combining parallel coverage before reporting and formatting long docstrings.

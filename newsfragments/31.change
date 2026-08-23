@@ -1,1 +1,0 @@
-Serialize nested collection chdir under a lock and resolve patterns to absolute paths.
