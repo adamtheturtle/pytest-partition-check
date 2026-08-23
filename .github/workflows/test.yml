@@ -35,11 +35,12 @@ jobs:
         run: uv run --extra=dev coverage run -m pytest -vvv --showlocals
         env:
           UV_PYTHON: ${{ matrix.python-version }}
-      - name: Report coverage
-        run: uv run --extra=dev coverage report
       - name: Combine coverage data
         if: always()
         run: uv run --extra=dev coverage combine
+      - name: Report coverage
+        if: always()
+        run: uv run --extra=dev coverage report
       - name: Upload coverage artifact
         if: always()
         uses: actions/upload-artifact@v4

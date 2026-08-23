@@ -165,7 +165,9 @@ def test_plugin_skips_collect_only(*, pytester: pytest.Pytester) -> None:
 
 
 def test_plugin_skips_when_tests_failed(*, pytester: pytest.Pytester) -> None:
-    """Partition checks are skipped when the outer session already failed."""
+    """Partition checks are skipped when the outer session already
+    failed.
+    """
     pytester.makepyfile(
         test_plugin_failed_outer_sample="""
         def test_one():
