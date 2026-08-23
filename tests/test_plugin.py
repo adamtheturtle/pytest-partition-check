@@ -56,3 +56,40 @@ def test_absolute_patterns_file_option(*, pytester: pytest.Pytester) -> None:
     )
     result = pytester.runpytest(f"--partition-patterns-path={patterns}")
     result.assert_outcomes(passed=1)
+
+
+def test_plugin_skips_collect_only(*, pytester: pytest.Pytester) -> None:
+    """Partition checks are skipped during --collect-only."""
+    pytester.makepyfile(
+        test_plugin_collect_only_sample="""
+        def test_one():
+            pass
+
+        def test_two():
+            pass
+        """
+    )
+    result = pytester.runpytest(
+        "--collect-only",
+        "--check-partition=test_plugin_collect_only_sample.py::test_one",
+    )
+    assert "partition check failed" not in result.stdout.str()
+    assert result.ret == 0
+
+
+def test_plugin_skips_when_tests_failed(*, pytester: pytest.Pytester) -> None:
+    """Partition checks are skipped when the outer session already failed."""
+    pytester.makepyfile(
+        test_plugin_failed_outer_sample="""
+        def test_one():
+            assert False
+
+        def test_two():
+            pass
+        """
+    )
+    result = pytester.runpytest(
+        "--check-partition=test_plugin_failed_outer_sample.py::test_one",
+    )
+    assert "partition check failed" not in result.stdout.str()
+    assert result.ret != 0

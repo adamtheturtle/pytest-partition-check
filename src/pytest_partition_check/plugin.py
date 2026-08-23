@@ -70,7 +70,10 @@ def pytest_sessionfinish(
     session: pytest.Session, exitstatus: int | pytest.ExitCode
 ) -> None:
     """Check the configured partition after the outer session finishes."""
-    del exitstatus
+    if session.config.option.collectonly:
+        return
+    if exitstatus not in {0, pytest.ExitCode.OK}:
+        return
     patterns = _patterns(config=session.config)
     if not patterns:
         return
