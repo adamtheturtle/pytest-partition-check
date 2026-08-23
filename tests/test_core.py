@@ -167,3 +167,9 @@ def test_full_suite_respects_testpaths(*, pytester: pytest.Pytester) -> None:
         "tests/test_inside.py::test_inside",
     }
     check_partition(patterns=("tests/test_inside.py",), rootdir=root)
+
+
+def test_selector_without_path_prefix(*, pytester: pytest.Pytester) -> None:
+    """A ``::name`` selector without a path prefix is left unchanged."""
+    root = _suite(pytester=pytester)
+    assert collect_node_ids(pattern="::test_one", rootdir=root) == frozenset()
