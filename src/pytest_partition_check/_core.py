@@ -25,6 +25,10 @@ class NestedPytestError(RuntimeError):
     """A nested pytest collection failed."""
 
 
+class PatternValidationError(ValueError):
+    """The given partition patterns are invalid."""
+
+
 class PartitionError(Exception):
     """The given patterns do not partition the test suite."""
 
@@ -91,7 +95,7 @@ def _resolve_rootdir(*, rootdir: Path | None) -> Path:
     resolved = resolved.resolve()
     if not resolved.is_dir():
         message = f"rootdir does not exist or is not a directory: {resolved}"
-        raise ValueError(message)
+        raise PatternValidationError(message)
     return resolved
 
 
@@ -123,27 +127,29 @@ def collect_node_ids(
     When ``pattern`` is ``None``, collect the default suite (respecting
     ``testpaths``) rather than forcing ``"."``.
     """
-    resolved_rootdir = _resolve_rootdir(rootdir=rootdir)
     recorder = _CollectionRecorder()
     disabled = dict.fromkeys((*_COLLECTION_MUTATING_PLUGINS, *disable_plugins))
-    argv = [
-        "--collect-only",
-        "--rootdir",
-        str(object=resolved_rootdir),
-        "-o",
-        "addopts=",
-        *(argument for name in disabled for argument in ("-p", f"no:{name}")),
-        *extra_args,
-    ]
-    if pattern is not None:
-        argv.append(
-            _absolute_pattern(pattern=pattern, rootdir=resolved_rootdir)
-        )
-    # Nested collection must run with cwd at rootdir so pytest discovers
-    # that tree's config (including testpaths). Absolute patterns avoid
-    # depending on cwd for path resolution, but config discovery still
-    # needs the chdir. Serialize cwd changes for thread safety.
+    # Resolve rootdir under the lock so concurrent callers with
+    # rootdir=None do not read another thread's temporary cwd.
     with _CHDIR_LOCK:
+        resolved_rootdir = _resolve_rootdir(rootdir=rootdir)
+        argv = [
+            "--collect-only",
+            "--rootdir",
+            str(object=resolved_rootdir),
+            "-o",
+            "addopts=",
+            *(
+                argument
+                for name in disabled
+                for argument in ("-p", f"no:{name}")
+            ),
+            *extra_args,
+        ]
+        if pattern is not None:
+            argv.append(
+                _absolute_pattern(pattern=pattern, rootdir=resolved_rootdir)
+            )
         previous_directory = Path.cwd()
         os.chdir(path=resolved_rootdir)
         try:
@@ -182,10 +188,10 @@ def check_partition(
     pattern_list = tuple(pattern.strip() for pattern in patterns)
     if not pattern_list:
         message = "no patterns provided"
-        raise ValueError(message)
+        raise PatternValidationError(message)
     if any(not pattern for pattern in pattern_list):
         message = "patterns must be non-empty after stripping whitespace"
-        raise ValueError(message)
+        raise PatternValidationError(message)
     duplicates = sorted(
         pattern
         for pattern, count in Counter(pattern_list).items()
@@ -194,7 +200,7 @@ def check_partition(
     if duplicates:
         formatted = ", ".join(duplicates)
         message = f"duplicate partition patterns: {formatted}"
-        raise ValueError(message)
+        raise PatternValidationError(message)
     disabled = tuple(disable_plugins)
     arguments = tuple(extra_args)
     collected_by_pattern = {

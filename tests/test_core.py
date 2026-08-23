@@ -7,6 +7,7 @@ import pytest
 from pytest_partition_check import (
     NestedPytestError,
     PartitionError,
+    PatternValidationError,
     check_partition,
     collect_node_ids,
 )
@@ -151,7 +152,9 @@ def test_unresolved_rootdir_matches_partition(
 def test_missing_rootdir_raises_value_error(*, tmp_path: Path) -> None:
     """A non-existent rootdir fails before nested collection."""
     missing = tmp_path / "does-not-exist"
-    with pytest.raises(expected_exception=ValueError, match="rootdir"):
+    with pytest.raises(
+        expected_exception=PatternValidationError, match="rootdir"
+    ):
         collect_node_ids(pattern="test_a.py", rootdir=missing)
 
 
@@ -180,28 +183,36 @@ def test_selector_without_path_prefix(*, pytester: pytest.Pytester) -> None:
 def test_empty_patterns_rejected(*, pytester: pytest.Pytester) -> None:
     """An empty pattern list is rejected before nested collection."""
     root = _suite(pytester=pytester)
-    with pytest.raises(expected_exception=ValueError, match="no patterns"):
+    with pytest.raises(
+        expected_exception=PatternValidationError, match="no patterns"
+    ):
         check_partition(patterns=(), rootdir=root)
 
 
 def test_whitespace_patterns_rejected(*, pytester: pytest.Pytester) -> None:
     """Whitespace-only patterns are rejected as empty."""
     root = _suite(pytester=pytester)
-    with pytest.raises(expected_exception=ValueError, match="non-empty"):
+    with pytest.raises(
+        expected_exception=PatternValidationError, match="non-empty"
+    ):
         check_partition(patterns=("  ", "\t"), rootdir=root)
 
 
 def test_empty_string_pattern_rejected(*, pytester: pytest.Pytester) -> None:
     """An empty-string pattern is a validation error, not a nested failure."""
     root = _suite(pytester=pytester)
-    with pytest.raises(expected_exception=ValueError, match="non-empty"):
+    with pytest.raises(
+        expected_exception=PatternValidationError, match="non-empty"
+    ):
         check_partition(patterns=("", "test_alpha.py"), rootdir=root)
 
 
 def test_duplicate_patterns_rejected(*, pytester: pytest.Pytester) -> None:
     """Duplicate patterns are rejected by the shared API."""
     root = _suite(pytester=pytester)
-    with pytest.raises(expected_exception=ValueError, match="duplicate"):
+    with pytest.raises(
+        expected_exception=PatternValidationError, match="duplicate"
+    ):
         check_partition(
             patterns=("test_alpha.py", "test_alpha.py"),
             rootdir=root,

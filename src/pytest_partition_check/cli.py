@@ -13,6 +13,7 @@ from beartype import beartype
 from pytest_partition_check import (
     NestedPytestError,
     PartitionError,
+    PatternValidationError,
     check_partition,
 )
 
@@ -58,6 +59,7 @@ def main() -> None:
             for line in patterns_path.read_text(encoding="utf-8").splitlines()
             if line.strip() and not line.lstrip().startswith("#")
         )
+    patterns = [pattern.strip() for pattern in patterns]
     duplicates = sorted(
         pattern for pattern, count in Counter(patterns).items() if count > 1
     )
@@ -76,5 +78,9 @@ def main() -> None:
             disable_plugins=arguments.disable_plugin,
             extra_args=arguments.extra_arg,
         )
-    except (NestedPytestError, ValueError, PartitionError) as error:
+    except (
+        NestedPytestError,
+        PatternValidationError,
+        PartitionError,
+    ) as error:
         parser.exit(status=1, message=f"{error}\n")

@@ -123,6 +123,27 @@ def test_cli_duplicate_patterns(
         main()
 
 
+def test_cli_whitespace_duplicate_patterns(
+    *, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """The CLI rejects patterns that differ only by surrounding whitespace."""
+    filename = "test_cli_ws_dup_sample.py"
+    _write_suite(root=tmp_path, filename=filename)
+    monkeypatch.setattr(
+        target=sys,
+        name="argv",
+        value=[
+            "pytest-check-partition",
+            "--rootdir",
+            str(object=tmp_path),
+            filename,
+            f" {filename} ",
+        ],
+    )
+    with pytest.raises(expected_exception=SystemExit, match="1"):
+        main()
+
+
 def test_empty_partition_error_message() -> None:
     """Empty structured sections render explicit stable placeholders."""
     section_count = 3
