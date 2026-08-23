@@ -1,0 +1,1 @@
+Stash the ``PartitionError`` instance from the plugin for structured inspection.
