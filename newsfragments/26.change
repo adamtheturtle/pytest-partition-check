@@ -1,1 +1,0 @@
-Reject duplicate patterns in ``check_partition`` so the API and plugin match the CLI.

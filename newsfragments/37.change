@@ -1,1 +1,0 @@
-Skip partition checks during ``--collect-only`` sessions.
