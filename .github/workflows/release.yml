@@ -18,7 +18,7 @@ jobs:
           persist-credentials: true
       - uses: astral-sh/setup-uv@v10.0.1
       - name: Calculate calendar version
-        uses: StephaneBour/actions-calver@master
+        uses: StephaneBour/actions-calver@v1.6
         id: calver
         with:
           date_format: '%Y.%-m.%-d'
