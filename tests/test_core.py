@@ -130,3 +130,24 @@ def test_pytest_split_is_disabled_by_default(
         "test_alpha.py::test_two",
         "test_beta.py::test_three",
     }
+
+
+def test_empty_patterns_rejected(*, pytester: pytest.Pytester) -> None:
+    """An empty pattern list is rejected before nested collection."""
+    root = _suite(pytester=pytester)
+    with pytest.raises(expected_exception=ValueError, match="no patterns"):
+        check_partition(patterns=(), rootdir=root)
+
+
+def test_whitespace_patterns_rejected(*, pytester: pytest.Pytester) -> None:
+    """Whitespace-only patterns are rejected as empty."""
+    root = _suite(pytester=pytester)
+    with pytest.raises(expected_exception=ValueError, match="non-empty"):
+        check_partition(patterns=("  ", "\t"), rootdir=root)
+
+
+def test_empty_string_pattern_rejected(*, pytester: pytest.Pytester) -> None:
+    """An empty-string pattern is a validation error, not a nested failure."""
+    root = _suite(pytester=pytester)
+    with pytest.raises(expected_exception=ValueError, match="non-empty"):
+        check_partition(patterns=("", "test_alpha.py"), rootdir=root)

@@ -139,7 +139,13 @@ def check_partition(
     """Raise ``PartitionError`` unless ``patterns`` partition the test
     suite.
     """
-    pattern_list = tuple(patterns)
+    pattern_list = tuple(pattern.strip() for pattern in patterns)
+    if not pattern_list:
+        message = "no patterns provided"
+        raise ValueError(message)
+    if any(not pattern for pattern in pattern_list):
+        message = "patterns must be non-empty after stripping whitespace"
+        raise ValueError(message)
     disabled = tuple(disable_plugins)
     arguments = tuple(extra_args)
     collected_by_pattern = {

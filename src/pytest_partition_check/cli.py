@@ -51,6 +51,8 @@ def main() -> None:
             status=1,
             message=f"Duplicate partition patterns:\n{formatted}\n",
         )
+    if not patterns:
+        parser.exit(status=1, message="no patterns provided\n")
     try:
         check_partition(
             patterns=patterns,
@@ -58,5 +60,7 @@ def main() -> None:
             disable_plugins=arguments.disable_plugin,
             extra_args=arguments.extra_arg,
         )
+    except ValueError as error:
+        parser.exit(status=1, message=f"{error}\n")
     except PartitionError as error:
         parser.exit(status=1, message=f"{error}\n")

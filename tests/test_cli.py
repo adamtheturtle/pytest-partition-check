@@ -132,3 +132,36 @@ def test_empty_partition_error_message() -> None:
         uncollected=frozenset(),
     )
     assert str(object=error).count("  (none)") == section_count
+
+
+def test_cli_empty_patterns(
+    *, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The CLI rejects an empty pattern list."""
+    monkeypatch.setattr(
+        target=sys,
+        name="argv",
+        value=["pytest-check-partition"],
+    )
+    with pytest.raises(expected_exception=SystemExit, match="1"):
+        main()
+
+
+def test_cli_whitespace_pattern(
+    *, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """The CLI surfaces core validation errors for blank patterns."""
+    filename = "test_cli_blank_sample.py"
+    _write_suite(root=tmp_path, filename=filename)
+    monkeypatch.setattr(
+        target=sys,
+        name="argv",
+        value=[
+            "pytest-check-partition",
+            "--rootdir",
+            str(object=tmp_path),
+            "   ",
+        ],
+    )
+    with pytest.raises(expected_exception=SystemExit, match="1"):
+        main()
