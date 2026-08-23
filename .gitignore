@@ -15,5 +15,4 @@ htmlcov/
 venv/
 .DS_Store
 src/*/_setuptools_scm_version.txt
-uv.lock
 styles/

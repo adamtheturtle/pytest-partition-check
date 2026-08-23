@@ -1,0 +1,1 @@
+Track ``uv.lock`` so CI and local installs share a reproducible dependency set.

@@ -1,0 +1,1 @@
+Include ``uv.lock`` in the CI uv cache dependency glob.

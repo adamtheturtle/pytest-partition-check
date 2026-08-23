@@ -28,7 +28,9 @@ jobs:
         uses: astral-sh/setup-uv@v10.0.1
         with:
           enable-cache: true
-          cache-dependency-glob: '**/pyproject.toml'
+          cache-dependency-glob: |
+            **/pyproject.toml
+            **/uv.lock
       - name: Run tests
         run: uv run --extra=dev coverage run -m pytest -vvv --showlocals
         env:
