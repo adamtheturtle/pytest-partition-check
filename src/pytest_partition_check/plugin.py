@@ -11,6 +11,7 @@ from beartype import beartype
 from beartype.door import TypeHint
 
 from pytest_partition_check import PartitionError, check_partition
+from pytest_partition_check._core import NestedPytestError
 
 
 @beartype
@@ -58,6 +59,9 @@ def _patterns(*, config: pytest.Config) -> tuple[str, ...]:
     path = Path(path_value)
     if not path.is_absolute():
         path = config.rootpath / path
+    if not path.is_file():
+        message = f"Patterns file not found: {path}"
+        raise FileNotFoundError(message)
     file_patterns = tuple(
         line.strip()
         for line in path.read_text(encoding="utf-8").splitlines()
@@ -71,11 +75,19 @@ def pytest_sessionfinish(
 ) -> None:
     """Check the configured partition after the outer session finishes."""
     del exitstatus
-    patterns = _patterns(config=session.config)
+    try:
+        patterns = _patterns(config=session.config)
+    except FileNotFoundError as error:
+        session.config.stash[_PARTITION_ERROR] = str(object=error)
+        session.exitstatus = pytest.ExitCode.TESTS_FAILED
+        return
     if not patterns:
         return
     try:
         check_partition(patterns=patterns, rootdir=session.config.rootpath)
+    except NestedPytestError as error:
+        session.config.stash[_PARTITION_ERROR] = str(object=error)
+        session.exitstatus = pytest.ExitCode.TESTS_FAILED
     except PartitionError as error:
         session.config.stash[_PARTITION_ERROR] = str(object=error)
         session.exitstatus = pytest.ExitCode.TESTS_FAILED

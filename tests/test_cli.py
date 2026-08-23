@@ -132,3 +132,48 @@ def test_empty_partition_error_message() -> None:
         uncollected=frozenset(),
     )
     assert str(object=error).count("  (none)") == section_count
+
+
+def test_cli_missing_patterns_file(
+    *, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """The CLI exits cleanly when the patterns file is missing."""
+    missing = tmp_path / "missing-patterns"
+    monkeypatch.setattr(
+        target=sys,
+        name="argv",
+        value=[
+            "pytest-check-partition",
+            "--partition-patterns-path",
+            str(object=missing),
+        ],
+    )
+    with pytest.raises(expected_exception=SystemExit, match="1"):
+        main()
+
+
+def test_cli_nested_pytest_error(
+    *, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Nested collection failures exit one without an uncaught traceback."""
+    filename = "test_cli_nested_sample.py"
+    _write_suite(root=tmp_path, filename=filename)
+    (tmp_path / "conftest.py").write_text(
+        data=(
+            "def pytest_collection(session):\n"
+            "    raise RuntimeError(\"broken collection\")\n"
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        target=sys,
+        name="argv",
+        value=[
+            "pytest-check-partition",
+            "--rootdir",
+            str(object=tmp_path),
+            filename,
+        ],
+    )
+    with pytest.raises(expected_exception=SystemExit, match="1"):
+        main()

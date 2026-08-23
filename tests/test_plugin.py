@@ -56,3 +56,44 @@ def test_absolute_patterns_file_option(*, pytester: pytest.Pytester) -> None:
     )
     result = pytester.runpytest(f"--partition-patterns-path={patterns}")
     result.assert_outcomes(passed=1)
+
+
+def test_plugin_missing_patterns_file(*, pytester: pytest.Pytester) -> None:
+    """A missing patterns file fails the session with a clear summary."""
+    pytester.makepyfile(
+        test_plugin_missing_sample="""
+        def test_one():
+            pass
+        """
+    )
+    result = pytester.runpytest(
+        "--partition-patterns-path=does-not-exist"
+    )
+    result.stdout.fnmatch_lines(
+        lines2=["*partition check failed*", "*Patterns file not found*"]
+    )
+    assert result.ret != 0
+
+
+def test_plugin_nested_pytest_error(*, pytester: pytest.Pytester) -> None:
+    """Nested collection failures are reported without INTERNALERROR."""
+    pytester.makepyfile(
+        test_plugin_nested_sample="""
+        def test_one():
+            pass
+        """
+    )
+    pytester.makeconftest(
+        source="""
+        def pytest_collection(session):
+            raise RuntimeError("broken collection")
+        """
+    )
+    result = pytester.runpytest(
+        "--check-partition=test_plugin_nested_sample.py"
+    )
+    assert "INTERNALERROR" not in result.stdout.str()
+    result.stdout.fnmatch_lines(
+        lines2=["*partition check failed*", "*Nested pytest collection failed*"]
+    )
+    assert result.ret != 0
