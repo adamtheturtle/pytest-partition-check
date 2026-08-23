@@ -53,8 +53,20 @@ jobs:
           tag: ${{ steps.tag_version.outputs.new_tag }}
           makeLatest: true
           bodyFile: release-notes.md
-  pypi:
+  test:
     needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.release.outputs.tag }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v10.0.1
+      - name: Run tests
+        run: uv run --extra=dev pytest -vvv --showlocals
+  pypi:
+    needs: [release, test]
     runs-on: ubuntu-latest
     environment: release
     permissions:
