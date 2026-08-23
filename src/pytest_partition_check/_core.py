@@ -39,7 +39,7 @@ class PartitionError(Exception):
         self.unmatched_patterns = unmatched_patterns
         self.overlapping: Mapping[str, frozenset[str]] = dict(overlapping)
         self.uncollected = uncollected
-        super().__init__()
+        super().__init__(self.__str__())
 
     def __str__(self) -> str:
         """Return a stable, human-readable report of every problem."""

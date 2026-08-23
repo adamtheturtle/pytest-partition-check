@@ -132,3 +132,4 @@ def test_empty_partition_error_message() -> None:
         uncollected=frozenset(),
     )
     assert str(object=error).count("  (none)") == section_count
+    assert error.args == (str(object=error),)
