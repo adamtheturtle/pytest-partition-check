@@ -1,3 +1,4 @@
+---
 name: Release
 
 on: workflow_dispatch
@@ -80,7 +81,7 @@ jobs:
         env:
           RELEASE: ${{ steps.calver.outputs.release }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
+        run: |-
           set -eux
           git fetch origin main
           commit="$(git rev-parse origin/main)"
