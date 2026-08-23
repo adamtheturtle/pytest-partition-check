@@ -56,7 +56,9 @@ workflow. With PyYAML installed, a repository test can contain:
 The pytest plugin offers repeatable ``--check-partition=PATTERN`` arguments.
 Store one pattern per line in a committed file with
 ``--partition-patterns-path=PATH`` or the ``partition_patterns_path`` ini
-option. A standalone check is also available:
+option. In plugin mode, forward nested-collection settings with ``--partition-disable-plugin`` / ``partition_disable_plugins`` and ``--partition-extra-arg`` / ``partition_extra_args`` (the functional API still uses ``disable_plugins`` and ``extra_args``).
+
+A standalone check is also available:
 
 .. code-block:: console
 

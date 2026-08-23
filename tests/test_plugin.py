@@ -56,3 +56,25 @@ def test_absolute_patterns_file_option(*, pytester: pytest.Pytester) -> None:
     )
     result = pytester.runpytest(f"--partition-patterns-path={patterns}")
     result.assert_outcomes(passed=1)
+
+
+def test_plugin_forwards_disable_and_extra_args(
+    *, pytester: pytest.Pytester
+) -> None:
+    """Plugin options reach nested collection."""
+    pytester.makepyfile(
+        test_plugin_forward_sample="""
+        def test_one():
+            pass
+
+        def test_two():
+            pass
+        """
+    )
+    result = pytester.runpytest(
+        "--check-partition=test_plugin_forward_sample.py::test_one",
+        "--check-partition=test_plugin_forward_sample.py::test_two",
+        "--partition-extra-arg=--disable-warnings",
+        "--partition-disable-plugin=break_collection",
+    )
+    result.assert_outcomes(passed=2)
