@@ -181,9 +181,9 @@ ignore = [
 ]
 
 [tool.deptry]
-optional_dependencies_dev_groups = [ "dev", "release" ]
 # Provided for the README workflow example (optional-dependencies.yaml), not imported by package code.
 per_rule_ignores.DEP002 = [ "pyyaml" ]
+optional_dependencies_dev_groups = [ "dev", "release" ]
 
 [tool.vulture]
 exclude = [ ".venv" ]
@@ -217,10 +217,10 @@ typeCheckingMode = "strict"
 enableTypeIgnoreComments = false
 reportUnnecessaryTypeIgnoreComment = true
 
-[tool.pytest.ini_options]
-addopts = [ "--strict-markers" ]
-log_cli = true
-xfail_strict = true
+[tool.pytest]
+ini_options.addopts = [ "--strict-markers" ]
+ini_options.xfail_strict = true
+ini_options.log_cli = true
 
 [tool.coverage]
 run.source = [ "src/", "tests/" ]

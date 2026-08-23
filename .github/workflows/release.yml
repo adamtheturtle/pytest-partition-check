@@ -3,6 +3,8 @@ name: Release
 
 on: workflow_dispatch
 
+permissions: {}
+
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -56,6 +58,7 @@ jobs:
   test:
     needs: release
     runs-on: ubuntu-latest
+    permissions: {}
     steps:
       - uses: actions/checkout@v7
         with:

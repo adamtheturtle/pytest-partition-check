@@ -123,9 +123,7 @@ def _extra_args(*, config: pytest.Config) -> tuple[str, ...]:
         msg = "pytest returned an invalid --partition-extra-arg value"
         raise TypeError(msg)
     ini_value = config.getini(name="partition_extra_args")
-    ini_args = (
-        tuple(shlex.split(s=str(object=ini_value))) if ini_value else ()
-    )
+    ini_args = tuple(shlex.split(s=str(object=ini_value))) if ini_value else ()
     return (*tuple(cli_value), *ini_args)
 
 
