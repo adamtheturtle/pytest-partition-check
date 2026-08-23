@@ -215,10 +215,10 @@ typeCheckingMode = "strict"
 enableTypeIgnoreComments = false
 reportUnnecessaryTypeIgnoreComment = true
 
-[tool.pytest.ini_options]
-addopts = [ "--strict-markers" ]
-log_cli = true
-xfail_strict = true
+[tool.pytest]
+ini_options.addopts = [ "--strict-markers" ]
+ini_options.xfail_strict = true
+ini_options.log_cli = true
 
 [tool.coverage]
 run.source = [ "src/", "tests/" ]
