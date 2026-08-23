@@ -54,7 +54,6 @@ optional-dependencies.dev = [
     "pytest==9.1.1",
     "pytest-split==0.11.0",
     "pytest-xdist==3.8.0",
-    "pyyaml==6.0.3",
     "ruff==0.16.3",
     "shellcheck-py==0.11.0.1",
     "shfmt-py==4.0.0",
@@ -68,7 +67,7 @@ optional-dependencies.dev = [
     "zizmor==1.29.0",
 ]
 optional-dependencies.release = [ "check-wheel-contents==0.6.3", "towncrier==25.8.0" ]
-optional-dependencies.yaml = [ "pyyaml" ]
+optional-dependencies.yaml = [ "pyyaml==6.0.3" ]
 urls.Changelog = "https://github.com/adamtheturtle/pytest-partition-check/blob/main/CHANGELOG.rst"
 urls.Source = "https://github.com/adamtheturtle/pytest-partition-check"
 scripts.pytest-check-partition = "pytest_partition_check.cli:main"
@@ -183,6 +182,8 @@ ignore = [
 
 [tool.deptry]
 optional_dependencies_dev_groups = [ "dev", "release" ]
+# Provided for the README workflow example (optional-dependencies.yaml), not imported by package code.
+per_rule_ignores.DEP002 = [ "pyyaml" ]
 
 [tool.vulture]
 exclude = [ ".venv" ]
