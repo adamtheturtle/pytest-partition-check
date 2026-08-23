@@ -130,3 +130,31 @@ def test_pytest_split_is_disabled_by_default(
         "test_alpha.py::test_two",
         "test_beta.py::test_three",
     }
+
+
+def test_collect_node_ids_rootdir_defaults_to_cwd(
+    *, pytester: pytest.Pytester, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Omitting rootdir collects from the current working directory."""
+    root = _suite(pytester=pytester)
+    monkeypatch.chdir(root)
+    assert collect_node_ids(pattern="test_alpha.py", rootdir=None) == {
+        "test_alpha.py::test_one",
+        "test_alpha.py::test_two",
+    }
+
+
+def test_collection_modifyitems_is_observed(
+    *, pytester: pytest.Pytester
+) -> None:
+    """Final node IDs include pytest_collection_modifyitems removals."""
+    root = _suite(pytester=pytester)
+    pytester.makeconftest(
+        source="""
+        def pytest_collection_modifyitems(config, items):
+            del items[1:]
+        """
+    )
+    assert collect_node_ids(pattern=".", rootdir=root) == {
+        "test_alpha.py::test_one",
+    }

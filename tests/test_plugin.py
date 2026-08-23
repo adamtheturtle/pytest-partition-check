@@ -56,3 +56,23 @@ def test_absolute_patterns_file_option(*, pytester: pytest.Pytester) -> None:
     )
     result = pytester.runpytest(f"--partition-patterns-path={patterns}")
     result.assert_outcomes(passed=1)
+
+
+def test_plugin_success_multiple_patterns(*, pytester: pytest.Pytester) -> None:
+    """Multiple valid --check-partition patterns succeed silently."""
+    pytester.makepyfile(
+        test_plugin_multi_sample="""
+        def test_one():
+            pass
+
+        def test_two():
+            pass
+        """
+    )
+    result = pytester.runpytest(
+        "--check-partition=test_plugin_multi_sample.py::test_one",
+        "--check-partition=test_plugin_multi_sample.py::test_two",
+    )
+    result.assert_outcomes(passed=2)
+    assert "partition check failed" not in result.stdout.str()
+    assert result.ret == 0

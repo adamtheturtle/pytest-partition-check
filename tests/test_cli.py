@@ -132,3 +132,28 @@ def test_empty_partition_error_message() -> None:
         uncollected=frozenset(),
     )
     assert str(object=error).count("  (none)") == section_count
+
+
+def test_cli_stdin_and_positional_patterns(
+    *, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Positional patterns merge with --patterns-stdin lines."""
+    filename = "test_cli_merge_sample.py"
+    _write_suite(root=tmp_path, filename=filename)
+    monkeypatch.setattr(
+        target=sys,
+        name="argv",
+        value=[
+            "pytest-check-partition",
+            "--rootdir",
+            str(object=tmp_path),
+            f"{filename}::test_one",
+            "--patterns-stdin",
+        ],
+    )
+    monkeypatch.setattr(
+        target=sys,
+        name="stdin",
+        value=StringIO(initial_value=filename + "::test_two\n"),
+    )
+    main()
