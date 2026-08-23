@@ -68,7 +68,7 @@ Changelog
 
 - Include ``uv.lock`` in the CI uv cache dependency glob.
 
-- Pin the release workflow calendar-version action to a released tag instead of `@master`.
+- Pin the release workflow calendar-version action to a released tag instead of ``@master``.
 
 - Run the CI test matrix on macOS as well as Ubuntu and Windows.
 
