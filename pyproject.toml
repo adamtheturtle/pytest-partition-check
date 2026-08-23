@@ -68,6 +68,7 @@ optional-dependencies.dev = [
     "zizmor==1.29.0",
 ]
 optional-dependencies.release = [ "check-wheel-contents==0.6.3", "towncrier==25.8.0" ]
+optional-dependencies.yaml = [ "pyyaml" ]
 urls.Changelog = "https://github.com/adamtheturtle/pytest-partition-check/blob/main/CHANGELOG.rst"
 urls.Source = "https://github.com/adamtheturtle/pytest-partition-check"
 scripts.pytest-check-partition = "pytest_partition_check.cli:main"

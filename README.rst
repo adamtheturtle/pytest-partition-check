@@ -25,8 +25,12 @@ instead checks hand-maintained node-ID patterns without replacing them.
 Usage
 -----
 
-The motivating use case reads the matrix directly from a GitHub Actions
-workflow. With PyYAML installed, a repository test can contain:
+The motivating use case reads shard patterns from a GitHub Actions
+workflow. Install the optional YAML extra first
+(``pip install pytest-partition-check[yaml]``). Adapt the job and matrix
+key names to your workflow; this repository's test job is ``tests`` and
+does not expose a dedicated pattern list key, so the example below uses
+placeholders:
 
 .. code-block:: python
 
@@ -42,10 +46,11 @@ workflow. With PyYAML installed, a repository test can contain:
        repository_root = request.config.rootpath
        workflow = repository_root / ".github" / "workflows" / "test.yml"
        config = yaml.safe_load(workflow.read_text())
-       matrix = config["jobs"]["ci-tests"]["strategy"]["matrix"]
+       # Replace "tests" / "shard_pattern" with your job and matrix key.
+       matrix = config["jobs"]["tests"]["strategy"]["matrix"]
        try:
            check_partition(
-               patterns=matrix["ci_pattern"],
+               patterns=matrix["shard_pattern"],
                rootdir=repository_root,
                disable_plugins=("pytest-retry", "pytest_beartype_tests"),
                extra_args=("--disable-warnings",),
@@ -64,6 +69,12 @@ A standalone check is also available:
 
    $ pytest-check-partition tests/unit tests/integration
 
+Patterns files support ``#`` comments: full-line comments and lines whose
+first non-whitespace character is ``#`` are ignored. The CLI merges
+positional patterns, ``--patterns-stdin`` lines, and
+``--partition-patterns-path`` entries into one list, for example
+``pytest-check-partition shard_a --partition-patterns-path extra.txt``.
+
 Patterns can also be read one per line from standard input, which is useful
 when extracting a CI matrix from another configuration file:
 
@@ -73,6 +84,15 @@ when extracting a CI matrix from another configuration file:
 
 Nested pytest collection
 ------------------------
+
+``check_partition`` runs one nested ``pytest --collect-only`` session per
+pattern plus one more for the full-suite baseline (N+1 collections). That
+cost is intentional so each shard is evaluated the same way CI will run
+it.
+
+Nested collection warnings are not re-emitted to the caller. Pass
+``extra_args=("--disable-warnings",)`` when unknown.ini options from
+disabled plugins would otherwise warn loudly.
 
 Collection runs in-process through ``pytest.main --collect-only``. The package
 reads the final ``session.items`` after collection-modification and deselection
