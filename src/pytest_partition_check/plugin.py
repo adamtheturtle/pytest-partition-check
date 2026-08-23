@@ -109,7 +109,7 @@ def _disable_plugins(*, config: pytest.Config) -> tuple[str, ...]:
     ini_value = config.getini(name="partition_disable_plugins")
     ini_plugins = tuple(
         part.strip()
-        for part in str(object=ini_value).split(",")
+        for part in str(object=ini_value).split(sep=",")
         if part.strip()
     )
     return (*tuple(cli_value), *ini_plugins)
@@ -123,7 +123,9 @@ def _extra_args(*, config: pytest.Config) -> tuple[str, ...]:
         msg = "pytest returned an invalid --partition-extra-arg value"
         raise TypeError(msg)
     ini_value = config.getini(name="partition_extra_args")
-    ini_args = tuple(shlex.split(str(object=ini_value))) if ini_value else ()
+    ini_args = (
+        tuple(shlex.split(s=str(object=ini_value))) if ini_value else ()
+    )
     return (*tuple(cli_value), *ini_args)
 
 

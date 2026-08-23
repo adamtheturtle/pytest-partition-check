@@ -252,7 +252,7 @@ def test_cli_relative_patterns_path_uses_rootdir(
     filename = "test_cli_rel_patterns_sample.py"
     _write_suite(root=tmp_path, filename=filename)
     (tmp_path / "patterns").write_text(data=filename + "\n", encoding="utf-8")
-    monkeypatch.chdir(tmp_path / "..")
+    monkeypatch.chdir(path=tmp_path / "..")
     monkeypatch.setattr(
         target=sys,
         name="argv",
