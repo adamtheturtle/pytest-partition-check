@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shlex
 from pathlib import Path
 from typing import TypeGuard
 
@@ -13,6 +14,7 @@ from beartype.door import TypeHint
 from pytest_partition_check import (
     NestedPytestError,
     PartitionError,
+    PatternValidationError,
     check_partition,
 )
 
@@ -121,7 +123,7 @@ def _extra_args(*, config: pytest.Config) -> tuple[str, ...]:
         msg = "pytest returned an invalid --partition-extra-arg value"
         raise TypeError(msg)
     ini_value = config.getini(name="partition_extra_args")
-    ini_args = tuple(str(object=ini_value).split()) if ini_value else ()
+    ini_args = tuple(shlex.split(str(object=ini_value))) if ini_value else ()
     return (*tuple(cli_value), *ini_args)
 
 
@@ -148,7 +150,11 @@ def pytest_sessionfinish(
             disable_plugins=_disable_plugins(config=session.config),
             extra_args=_extra_args(config=session.config),
         )
-    except (NestedPytestError, ValueError, PartitionError) as error:
+    except (
+        NestedPytestError,
+        PatternValidationError,
+        PartitionError,
+    ) as error:
         session.config.stash[_PARTITION_ERROR] = error
         session.exitstatus = pytest.ExitCode.TESTS_FAILED
 

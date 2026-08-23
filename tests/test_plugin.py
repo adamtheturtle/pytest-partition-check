@@ -202,3 +202,41 @@ def test_plugin_success_multiple_patterns(
     result.assert_outcomes(passed=2)
     assert "partition check failed" not in result.stdout.str()
     assert result.ret == 0
+
+
+def test_plugin_ini_extra_args_use_shell_splitting(
+    *, pytester: pytest.Pytester
+) -> None:
+    """The partition_extra_args ini option preserves quoted tokens."""
+    pytester.makepyfile(
+        test_plugin_ini_extra_args_sample="""
+        import pytest
+
+        @pytest.mark.needs_marker
+        def test_one():
+            pass
+
+        def test_two():
+            pass
+        """
+    )
+    pytester.makeini(
+        source=(
+            "[pytest]\n"
+            "markers =\n"
+            "    needs_marker: needs marker\n"
+            'partition_extra_args = -m "not needs_marker"\n'
+        )
+    )
+    result = pytester.runpytest(
+        "--check-partition=test_plugin_ini_extra_args_sample.py::test_one",
+        "--check-partition=test_plugin_ini_extra_args_sample.py::test_two",
+    )
+    result.assert_outcomes(passed=2)
+    result.stdout.fnmatch_lines(
+        lines2=[
+            "*partition check failed*",
+            "*test_plugin_ini_extra_args_sample.py::test_one*",
+        ]
+    )
+    assert result.ret != 0
