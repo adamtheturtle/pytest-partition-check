@@ -1,0 +1,1 @@
+Raise ValueError when rootdir does not exist or is not a directory.

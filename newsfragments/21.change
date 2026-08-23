@@ -1,0 +1,1 @@
+Collect the full-suite baseline with pytest defaults so testpaths is respected.

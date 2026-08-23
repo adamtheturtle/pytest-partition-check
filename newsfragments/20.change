@@ -1,0 +1,1 @@
+Resolve collection rootdirs so macOS temporary paths produce stable node IDs.

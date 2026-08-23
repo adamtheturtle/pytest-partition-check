@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import threading
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
 from pathlib import Path
@@ -16,6 +17,8 @@ _COLLECTION_MUTATING_PLUGINS = (
     "xdist",
     "pytest_partition_check",
 )
+
+_CHDIR_LOCK = threading.Lock()
 
 
 class NestedPytestError(RuntimeError):
@@ -82,17 +85,45 @@ class _CollectionRecorder:
 
 
 @beartype
+def _resolve_rootdir(*, rootdir: Path | None) -> Path:
+    """Return an absolute existing directory for nested collection."""
+    resolved = Path.cwd() if rootdir is None else rootdir
+    resolved = resolved.resolve()
+    if not resolved.is_dir():
+        message = f"rootdir does not exist or is not a directory: {resolved}"
+        raise ValueError(message)
+    return resolved
+
+
+@beartype
+def _absolute_pattern(*, pattern: str, rootdir: Path) -> str:
+    """Return ``pattern`` with its path portion resolved under
+    ``rootdir``.
+    """
+    path_part, separator, rest = pattern.partition("::")
+    if not path_part:
+        return pattern
+    absolute = str(object=(rootdir / path_part).resolve())
+    if separator:
+        return f"{absolute}{separator}{rest}"
+    return absolute
+
+
+@beartype
 def collect_node_ids(
     *,
-    pattern: str,
+    pattern: str | None = None,
     rootdir: Path | None = None,
     disable_plugins: Iterable[str] = (),
     extra_args: Iterable[str] = (),
 ) -> frozenset[str]:
     """Return the node IDs of every test ``pytest`` collects for
     ``pattern``.
+
+    When ``pattern`` is ``None``, collect the default suite (respecting
+    ``testpaths``) rather than forcing ``"."``.
     """
-    resolved_rootdir = Path.cwd() if rootdir is None else rootdir
+    resolved_rootdir = _resolve_rootdir(rootdir=rootdir)
     recorder = _CollectionRecorder()
     disabled = dict.fromkeys((*_COLLECTION_MUTATING_PLUGINS, *disable_plugins))
     argv = [
@@ -103,16 +134,24 @@ def collect_node_ids(
         "addopts=",
         *(argument for name in disabled for argument in ("-p", f"no:{name}")),
         *extra_args,
-        pattern,
     ]
-    previous_directory = Path.cwd()
-    os.chdir(path=resolved_rootdir)
-    try:
-        exit_code = pytest.ExitCode(
-            value=pytest.main(args=argv, plugins=[recorder])
+    if pattern is not None:
+        argv.append(
+            _absolute_pattern(pattern=pattern, rootdir=resolved_rootdir)
         )
-    finally:
-        os.chdir(path=previous_directory)
+    # Nested collection must run with cwd at rootdir so pytest discovers
+    # that tree's config (including testpaths). Absolute patterns avoid
+    # depending on cwd for path resolution, but config discovery still
+    # needs the chdir. Serialize cwd changes for thread safety.
+    with _CHDIR_LOCK:
+        previous_directory = Path.cwd()
+        os.chdir(path=resolved_rootdir)
+        try:
+            exit_code = pytest.ExitCode(
+                value=pytest.main(args=argv, plugins=[recorder])
+            )
+        finally:
+            os.chdir(path=previous_directory)
     normal_codes = {pytest.ExitCode.OK, pytest.ExitCode.NO_TESTS_COLLECTED}
     unmatched_selector = (
         exit_code is pytest.ExitCode.USAGE_ERROR
@@ -120,9 +159,10 @@ def collect_node_ids(
     )
     if exit_code in normal_codes or unmatched_selector:
         return recorder.node_ids
+    display_pattern = "." if pattern is None else pattern
     message = (
         "Nested pytest collection failed for pattern "
-        f"{pattern!r} with exit code {exit_code.name} "
+        f"{display_pattern!r} with exit code {exit_code.name} "
         f"({int(exit_code)})."
     )
     raise NestedPytestError(message)
@@ -152,7 +192,7 @@ def check_partition(
         for pattern in pattern_list
     }
     full_suite = collect_node_ids(
-        pattern=".",
+        pattern=None,
         rootdir=rootdir,
         disable_plugins=disabled,
         extra_args=arguments,

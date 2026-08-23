@@ -130,3 +130,46 @@ def test_pytest_split_is_disabled_by_default(
         "test_alpha.py::test_two",
         "test_beta.py::test_three",
     }
+
+
+def test_unresolved_rootdir_matches_partition(
+    *, pytester: pytest.Pytester
+) -> None:
+    """Resolving rootdir keeps per-pattern and full-suite node IDs aligned."""
+    root = _suite(pytester=pytester)
+    unresolved = Path(str(object=root))
+    check_partition(
+        patterns=("test_alpha.py::test_one", "test_alpha.py::test_two", "test_beta.py"),
+        rootdir=unresolved,
+    )
+
+
+def test_missing_rootdir_raises_value_error(
+    *, tmp_path: Path
+) -> None:
+    """A non-existent rootdir fails before nested collection."""
+    missing = tmp_path / "does-not-exist"
+    with pytest.raises(expected_exception=ValueError, match="rootdir"):
+        collect_node_ids(pattern="test_a.py", rootdir=missing)
+
+
+def test_full_suite_respects_testpaths(*, pytester: pytest.Pytester) -> None:
+    """Omitting a path argument for the full suite honours testpaths."""
+    pytester.makepyfile(
+        **{
+            "tests/test_inside": "def test_inside():\n    pass\n",
+            "test_outside": "def test_outside():\n    pass\n",
+        }
+    )
+    pytester.makefile(".ini", pytest="[pytest]\ntestpaths = tests\n")
+    root = pytester.path
+    assert collect_node_ids(pattern=None, rootdir=root) == {
+        "tests/test_inside.py::test_inside",
+    }
+    check_partition(patterns=("tests/test_inside.py",), rootdir=root)
+
+
+def test_selector_without_path_prefix(*, pytester: pytest.Pytester) -> None:
+    """A ``::name`` selector without a path prefix is left unchanged."""
+    root = _suite(pytester=pytester)
+    assert collect_node_ids(pattern="::test_one", rootdir=root) == frozenset()
