@@ -56,3 +56,26 @@ def test_absolute_patterns_file_option(*, pytester: pytest.Pytester) -> None:
     )
     result = pytester.runpytest(f"--partition-patterns-path={patterns}")
     result.assert_outcomes(passed=1)
+
+
+def test_plugin_duplicate_patterns_across_sources(
+    *, pytester: pytest.Pytester
+) -> None:
+    """Duplicates across CLI and patterns file fail the session."""
+    pytester.makepyfile(
+        test_plugin_dup_sample="""
+        def test_one():
+            pass
+        """
+    )
+    patterns = pytester.makefile(
+        "", dup_patterns="test_plugin_dup_sample.py\n"
+    )
+    result = pytester.runpytest(
+        "--check-partition=test_plugin_dup_sample.py",
+        f"--partition-patterns-path={patterns}",
+    )
+    result.stdout.fnmatch_lines(
+        lines2=["*partition check failed*", "*duplicate*"]
+    )
+    assert result.ret != 0

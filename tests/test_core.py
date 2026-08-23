@@ -130,3 +130,13 @@ def test_pytest_split_is_disabled_by_default(
         "test_alpha.py::test_two",
         "test_beta.py::test_three",
     }
+
+
+def test_duplicate_patterns_rejected(*, pytester: pytest.Pytester) -> None:
+    """Duplicate patterns are rejected by the shared API."""
+    root = _suite(pytester=pytester)
+    with pytest.raises(expected_exception=ValueError, match="duplicate"):
+        check_partition(
+            patterns=("test_alpha.py", "test_alpha.py"),
+            rootdir=root,
+        )

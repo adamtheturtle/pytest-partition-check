@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from collections import defaultdict
+from collections import Counter, defaultdict
 from collections.abc import Iterable, Mapping
 from pathlib import Path
 
@@ -140,6 +140,13 @@ def check_partition(
     suite.
     """
     pattern_list = tuple(patterns)
+    duplicates = sorted(
+        pattern for pattern, count in Counter(pattern_list).items() if count > 1
+    )
+    if duplicates:
+        formatted = ", ".join(duplicates)
+        message = f"duplicate partition patterns: {formatted}"
+        raise ValueError(message)
     disabled = tuple(disable_plugins)
     arguments = tuple(extra_args)
     collected_by_pattern = {

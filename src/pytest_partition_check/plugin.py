@@ -76,6 +76,9 @@ def pytest_sessionfinish(
         return
     try:
         check_partition(patterns=patterns, rootdir=session.config.rootpath)
+    except ValueError as error:
+        session.config.stash[_PARTITION_ERROR] = str(object=error)
+        session.exitstatus = pytest.ExitCode.TESTS_FAILED
     except PartitionError as error:
         session.config.stash[_PARTITION_ERROR] = str(object=error)
         session.exitstatus = pytest.ExitCode.TESTS_FAILED

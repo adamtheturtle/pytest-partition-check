@@ -1,0 +1,1 @@
+Add a plugin test for duplicates across ``--check-partition`` and a patterns file.
