@@ -132,3 +132,36 @@ def test_empty_partition_error_message() -> None:
         uncollected=frozenset(),
     )
     assert str(object=error).count("  (none)") == section_count
+
+
+def test_cli_version(*, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The CLI prints the installed package version."""
+    monkeypatch.setattr(
+        target=sys,
+        name="argv",
+        value=["pytest-check-partition", "--version"],
+    )
+    with pytest.raises(expected_exception=SystemExit, match="0"):
+        main()
+
+
+def test_cli_relative_patterns_path_uses_rootdir(
+    *, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Relative patterns paths resolve against --rootdir."""
+    filename = "test_cli_rel_patterns_sample.py"
+    _write_suite(root=tmp_path, filename=filename)
+    (tmp_path / "patterns").write_text(data=filename + "\n", encoding="utf-8")
+    monkeypatch.chdir(tmp_path / "..")
+    monkeypatch.setattr(
+        target=sys,
+        name="argv",
+        value=[
+            "pytest-check-partition",
+            "--rootdir",
+            str(object=tmp_path),
+            "--partition-patterns-path",
+            "patterns",
+        ],
+    )
+    main()

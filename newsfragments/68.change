@@ -1,0 +1,1 @@
+Resolve relative CLI patterns paths against ``--rootdir``.

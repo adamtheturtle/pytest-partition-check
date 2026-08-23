@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from importlib.metadata import version
 from collections import Counter
 from pathlib import Path
 
@@ -16,6 +17,11 @@ from pytest_partition_check import PartitionError, check_partition
 def main() -> None:
     """Run the partition check and exit non-zero when it fails."""
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=version("pytest-partition-check"),
+    )
     parser.add_argument("patterns", nargs="*")
     parser.add_argument("--partition-patterns-path", type=Path)
     parser.add_argument(
@@ -35,11 +41,12 @@ def main() -> None:
             if line.strip() and not line.lstrip().startswith("#")
         )
     if arguments.partition_patterns_path is not None:
+        patterns_path = arguments.partition_patterns_path
+        if not patterns_path.is_absolute() and arguments.rootdir is not None:
+            patterns_path = arguments.rootdir / patterns_path
         patterns.extend(
             line.strip()
-            for line in arguments.partition_patterns_path.read_text(
-                encoding="utf-8"
-            ).splitlines()
+            for line in patterns_path.read_text(encoding="utf-8").splitlines()
             if line.strip() and not line.lstrip().startswith("#")
         )
     duplicates = sorted(
