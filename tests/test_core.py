@@ -224,7 +224,7 @@ def test_collect_node_ids_rootdir_defaults_to_cwd(
 ) -> None:
     """Omitting rootdir collects from the current working directory."""
     root = _suite(pytester=pytester)
-    monkeypatch.chdir(root)
+    monkeypatch.chdir(path=root)
     assert collect_node_ids(pattern="test_alpha.py", rootdir=None) == {
         "test_alpha.py::test_one",
         "test_alpha.py::test_two",

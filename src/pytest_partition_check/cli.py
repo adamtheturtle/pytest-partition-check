@@ -25,7 +25,7 @@ def main() -> None:
     parser.add_argument(
         "--version",
         action="version",
-        version=version("pytest-partition-check"),
+        version=version(distribution_name="pytest-partition-check"),
     )
     parser.add_argument("patterns", nargs="*")
     parser.add_argument("--partition-patterns-path", type=Path)

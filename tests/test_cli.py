@@ -208,7 +208,9 @@ def test_cli_missing_patterns_file(
 def test_cli_nested_pytest_error(
     *, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    """Nested collection failures exit one without an uncaught traceback."""
+    """Nested collection failures exit one without an uncaught
+    traceback.
+    """
     filename = "test_cli_nested_sample.py"
     _write_suite(root=tmp_path, filename=filename)
     (tmp_path / "conftest.py").write_text(
@@ -250,7 +252,7 @@ def test_cli_relative_patterns_path_uses_rootdir(
     filename = "test_cli_rel_patterns_sample.py"
     _write_suite(root=tmp_path, filename=filename)
     (tmp_path / "patterns").write_text(data=filename + "\n", encoding="utf-8")
-    monkeypatch.chdir(tmp_path / "..")
+    monkeypatch.chdir(path=tmp_path / "..")
     monkeypatch.setattr(
         target=sys,
         name="argv",

@@ -1,9 +1,17 @@
 CLI
 PyPI
 addopts
+args
 beartype
+cwd
+honours
+ini
 nodeid
 pragma
 pytest
 rootdir
+stdin
+testpaths
+traceback
+whitespace
 xdist
