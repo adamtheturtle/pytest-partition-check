@@ -1,0 +1,1 @@
+Add a CLI test that merges positional patterns with ``--patterns-stdin``.

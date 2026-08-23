@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 import threading
-from collections import defaultdict
+from collections import Counter, defaultdict
 from collections.abc import Iterable, Mapping
 from pathlib import Path
 
@@ -179,7 +179,22 @@ def check_partition(
     """Raise ``PartitionError`` unless ``patterns`` partition the test
     suite.
     """
-    pattern_list = tuple(patterns)
+    pattern_list = tuple(pattern.strip() for pattern in patterns)
+    if not pattern_list:
+        message = "no patterns provided"
+        raise ValueError(message)
+    if any(not pattern for pattern in pattern_list):
+        message = "patterns must be non-empty after stripping whitespace"
+        raise ValueError(message)
+    duplicates = sorted(
+        pattern
+        for pattern, count in Counter(pattern_list).items()
+        if count > 1
+    )
+    if duplicates:
+        formatted = ", ".join(duplicates)
+        message = f"duplicate partition patterns: {formatted}"
+        raise ValueError(message)
     disabled = tuple(disable_plugins)
     arguments = tuple(extra_args)
     collected_by_pattern = {

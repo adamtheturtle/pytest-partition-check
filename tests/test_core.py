@@ -139,14 +139,16 @@ def test_unresolved_rootdir_matches_partition(
     root = _suite(pytester=pytester)
     unresolved = Path(str(object=root))
     check_partition(
-        patterns=("test_alpha.py::test_one", "test_alpha.py::test_two", "test_beta.py"),
+        patterns=(
+            "test_alpha.py::test_one",
+            "test_alpha.py::test_two",
+            "test_beta.py",
+        ),
         rootdir=unresolved,
     )
 
 
-def test_missing_rootdir_raises_value_error(
-    *, tmp_path: Path
-) -> None:
+def test_missing_rootdir_raises_value_error(*, tmp_path: Path) -> None:
     """A non-existent rootdir fails before nested collection."""
     missing = tmp_path / "does-not-exist"
     with pytest.raises(expected_exception=ValueError, match="rootdir"):
@@ -173,3 +175,62 @@ def test_selector_without_path_prefix(*, pytester: pytest.Pytester) -> None:
     """A ``::name`` selector without a path prefix is left unchanged."""
     root = _suite(pytester=pytester)
     assert collect_node_ids(pattern="::test_one", rootdir=root) == frozenset()
+
+
+def test_empty_patterns_rejected(*, pytester: pytest.Pytester) -> None:
+    """An empty pattern list is rejected before nested collection."""
+    root = _suite(pytester=pytester)
+    with pytest.raises(expected_exception=ValueError, match="no patterns"):
+        check_partition(patterns=(), rootdir=root)
+
+
+def test_whitespace_patterns_rejected(*, pytester: pytest.Pytester) -> None:
+    """Whitespace-only patterns are rejected as empty."""
+    root = _suite(pytester=pytester)
+    with pytest.raises(expected_exception=ValueError, match="non-empty"):
+        check_partition(patterns=("  ", "\t"), rootdir=root)
+
+
+def test_empty_string_pattern_rejected(*, pytester: pytest.Pytester) -> None:
+    """An empty-string pattern is a validation error, not a nested failure."""
+    root = _suite(pytester=pytester)
+    with pytest.raises(expected_exception=ValueError, match="non-empty"):
+        check_partition(patterns=("", "test_alpha.py"), rootdir=root)
+
+
+def test_duplicate_patterns_rejected(*, pytester: pytest.Pytester) -> None:
+    """Duplicate patterns are rejected by the shared API."""
+    root = _suite(pytester=pytester)
+    with pytest.raises(expected_exception=ValueError, match="duplicate"):
+        check_partition(
+            patterns=("test_alpha.py", "test_alpha.py"),
+            rootdir=root,
+        )
+
+
+def test_collect_node_ids_rootdir_defaults_to_cwd(
+    *, pytester: pytest.Pytester, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Omitting rootdir collects from the current working directory."""
+    root = _suite(pytester=pytester)
+    monkeypatch.chdir(root)
+    assert collect_node_ids(pattern="test_alpha.py", rootdir=None) == {
+        "test_alpha.py::test_one",
+        "test_alpha.py::test_two",
+    }
+
+
+def test_collection_modifyitems_is_observed(
+    *, pytester: pytest.Pytester
+) -> None:
+    """Final node IDs include pytest_collection_modifyitems removals."""
+    root = _suite(pytester=pytester)
+    pytester.makeconftest(
+        source="""
+        def pytest_collection_modifyitems(config, items):
+            del items[1:]
+        """
+    )
+    assert collect_node_ids(pattern=".", rootdir=root) == {
+        "test_alpha.py::test_one",
+    }

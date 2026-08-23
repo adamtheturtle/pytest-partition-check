@@ -1,0 +1,1 @@
+Catch ``NestedPytestError`` in the CLI and exit with status 1.

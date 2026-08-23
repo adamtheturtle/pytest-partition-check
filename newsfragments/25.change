@@ -1,0 +1,1 @@
+Make the CLI exit with a clear error when no patterns are provided.

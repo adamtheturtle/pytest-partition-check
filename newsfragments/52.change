@@ -1,0 +1,1 @@
+Add a CLI test for ``NestedPytestError`` handling.

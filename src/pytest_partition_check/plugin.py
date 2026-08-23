@@ -10,7 +10,11 @@ from _pytest.terminal import TerminalReporter
 from beartype import beartype
 from beartype.door import TypeHint
 
-from pytest_partition_check import PartitionError, check_partition
+from pytest_partition_check import (
+    NestedPytestError,
+    PartitionError,
+    check_partition,
+)
 
 
 @beartype
@@ -82,13 +86,15 @@ def _patterns(*, config: pytest.Config) -> tuple[str, ...]:
     path = Path(path_value)
     if not path.is_absolute():
         path = config.rootpath / path
+    if not path.is_file():
+        message = f"Patterns file not found: {path}"
+        raise FileNotFoundError(message)
     file_patterns = tuple(
         line.strip()
         for line in path.read_text(encoding="utf-8").splitlines()
         if line.strip() and not line.lstrip().startswith("#")
     )
     return (*direct, *file_patterns)
-
 
 
 @beartype
@@ -100,7 +106,9 @@ def _disable_plugins(*, config: pytest.Config) -> tuple[str, ...]:
         raise TypeError(msg)
     ini_value = config.getini(name="partition_disable_plugins")
     ini_plugins = tuple(
-        part.strip() for part in str(object=ini_value).split(",") if part.strip()
+        part.strip()
+        for part in str(object=ini_value).split(",")
+        if part.strip()
     )
     return (*tuple(cli_value), *ini_plugins)
 
@@ -116,12 +124,21 @@ def _extra_args(*, config: pytest.Config) -> tuple[str, ...]:
     ini_args = tuple(str(object=ini_value).split()) if ini_value else ()
     return (*tuple(cli_value), *ini_args)
 
+
 def pytest_sessionfinish(
     session: pytest.Session, exitstatus: int | pytest.ExitCode
 ) -> None:
     """Check the configured partition after the outer session finishes."""
-    del exitstatus
-    patterns = _patterns(config=session.config)
+    if session.config.option.collectonly:
+        return
+    if exitstatus not in {0, pytest.ExitCode.OK}:
+        return
+    try:
+        patterns = _patterns(config=session.config)
+    except FileNotFoundError as error:
+        session.config.stash[_PARTITION_ERROR] = error
+        session.exitstatus = pytest.ExitCode.TESTS_FAILED
+        return
     if not patterns:
         return
     try:
@@ -131,7 +148,7 @@ def pytest_sessionfinish(
             disable_plugins=_disable_plugins(config=session.config),
             extra_args=_extra_args(config=session.config),
         )
-    except PartitionError as error:
+    except (NestedPytestError, ValueError, PartitionError) as error:
         session.config.stash[_PARTITION_ERROR] = error
         session.exitstatus = pytest.ExitCode.TESTS_FAILED
 
