@@ -215,9 +215,8 @@ typeCheckingMode = "strict"
 enableTypeIgnoreComments = false
 reportUnnecessaryTypeIgnoreComment = true
 
-[tool.pytest]
+[tool.pytest.ini_options]
 addopts = [ "--strict-markers" ]
-cumulative_timing = false
 log_cli = true
 xfail_strict = true
 
