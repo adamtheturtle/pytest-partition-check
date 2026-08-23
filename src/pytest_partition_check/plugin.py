@@ -40,6 +40,30 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         help="Path containing one partition pattern per line.",
         default="",
     )
+    group.addoption(
+        "--partition-disable-plugin",
+        action="append",
+        default=[],
+        metavar="NAME",
+        help="Disable NAME during nested partition collection.",
+    )
+    group.addoption(
+        "--partition-extra-arg",
+        action="append",
+        default=[],
+        metavar="ARG",
+        help="Forward ARG to nested partition collection.",
+    )
+    parser.addini(
+        name="partition_disable_plugins",
+        help="Comma-separated plugins to disable during nested collection.",
+        default="",
+    )
+    parser.addini(
+        name="partition_extra_args",
+        help="Whitespace-separated extra args for nested collection.",
+        default="",
+    )
 
 
 @beartype
@@ -66,6 +90,32 @@ def _patterns(*, config: pytest.Config) -> tuple[str, ...]:
     return (*direct, *file_patterns)
 
 
+
+@beartype
+def _disable_plugins(*, config: pytest.Config) -> tuple[str, ...]:
+    """Return plugins to disable during nested collection."""
+    cli_value = config.getoption(name="partition_disable_plugin")
+    if not _is_string_list(value=cli_value):  # pragma: no cover
+        msg = "pytest returned an invalid --partition-disable-plugin value"
+        raise TypeError(msg)
+    ini_value = config.getini(name="partition_disable_plugins")
+    ini_plugins = tuple(
+        part.strip() for part in str(object=ini_value).split(",") if part.strip()
+    )
+    return (*tuple(cli_value), *ini_plugins)
+
+
+@beartype
+def _extra_args(*, config: pytest.Config) -> tuple[str, ...]:
+    """Return extra args for nested collection."""
+    cli_value = config.getoption(name="partition_extra_arg")
+    if not _is_string_list(value=cli_value):  # pragma: no cover
+        msg = "pytest returned an invalid --partition-extra-arg value"
+        raise TypeError(msg)
+    ini_value = config.getini(name="partition_extra_args")
+    ini_args = tuple(str(object=ini_value).split()) if ini_value else ()
+    return (*tuple(cli_value), *ini_args)
+
 def pytest_sessionfinish(
     session: pytest.Session, exitstatus: int | pytest.ExitCode
 ) -> None:
@@ -75,7 +125,12 @@ def pytest_sessionfinish(
     if not patterns:
         return
     try:
-        check_partition(patterns=patterns, rootdir=session.config.rootpath)
+        check_partition(
+            patterns=patterns,
+            rootdir=session.config.rootpath,
+            disable_plugins=_disable_plugins(config=session.config),
+            extra_args=_extra_args(config=session.config),
+        )
     except PartitionError as error:
         session.config.stash[_PARTITION_ERROR] = str(object=error)
         session.exitstatus = pytest.ExitCode.TESTS_FAILED
