@@ -133,3 +133,137 @@ def test_empty_partition_error_message() -> None:
     )
     assert str(object=error).count("  (none)") == section_count
     assert error.args == (str(object=error),)
+
+
+def test_cli_empty_patterns(*, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The CLI rejects an empty pattern list."""
+    monkeypatch.setattr(
+        target=sys,
+        name="argv",
+        value=["pytest-check-partition"],
+    )
+    with pytest.raises(expected_exception=SystemExit, match="1"):
+        main()
+
+
+def test_cli_whitespace_pattern(
+    *, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """The CLI surfaces core validation errors for blank patterns."""
+    filename = "test_cli_blank_sample.py"
+    _write_suite(root=tmp_path, filename=filename)
+    monkeypatch.setattr(
+        target=sys,
+        name="argv",
+        value=[
+            "pytest-check-partition",
+            "--rootdir",
+            str(object=tmp_path),
+            "   ",
+        ],
+    )
+    with pytest.raises(expected_exception=SystemExit, match="1"):
+        main()
+
+
+def test_cli_missing_patterns_file(
+    *, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """The CLI exits cleanly when the patterns file is missing."""
+    missing = tmp_path / "missing-patterns"
+    monkeypatch.setattr(
+        target=sys,
+        name="argv",
+        value=[
+            "pytest-check-partition",
+            "--partition-patterns-path",
+            str(object=missing),
+        ],
+    )
+    with pytest.raises(expected_exception=SystemExit, match="1"):
+        main()
+
+
+def test_cli_nested_pytest_error(
+    *, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Nested collection failures exit one without an uncaught traceback."""
+    filename = "test_cli_nested_sample.py"
+    _write_suite(root=tmp_path, filename=filename)
+    (tmp_path / "conftest.py").write_text(
+        data=(
+            "def pytest_collection(session):\n"
+            '    raise RuntimeError("broken collection")\n'
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        target=sys,
+        name="argv",
+        value=[
+            "pytest-check-partition",
+            "--rootdir",
+            str(object=tmp_path),
+            filename,
+        ],
+    )
+    with pytest.raises(expected_exception=SystemExit, match="1"):
+        main()
+
+
+def test_cli_version(*, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The CLI prints the installed package version."""
+    monkeypatch.setattr(
+        target=sys,
+        name="argv",
+        value=["pytest-check-partition", "--version"],
+    )
+    with pytest.raises(expected_exception=SystemExit, match="0"):
+        main()
+
+
+def test_cli_relative_patterns_path_uses_rootdir(
+    *, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Relative patterns paths resolve against --rootdir."""
+    filename = "test_cli_rel_patterns_sample.py"
+    _write_suite(root=tmp_path, filename=filename)
+    (tmp_path / "patterns").write_text(data=filename + "\n", encoding="utf-8")
+    monkeypatch.chdir(tmp_path / "..")
+    monkeypatch.setattr(
+        target=sys,
+        name="argv",
+        value=[
+            "pytest-check-partition",
+            "--rootdir",
+            str(object=tmp_path),
+            "--partition-patterns-path",
+            "patterns",
+        ],
+    )
+    main()
+
+
+def test_cli_stdin_and_positional_patterns(
+    *, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Positional patterns merge with --patterns-stdin lines."""
+    filename = "test_cli_merge_sample.py"
+    _write_suite(root=tmp_path, filename=filename)
+    monkeypatch.setattr(
+        target=sys,
+        name="argv",
+        value=[
+            "pytest-check-partition",
+            "--rootdir",
+            str(object=tmp_path),
+            f"{filename}::test_one",
+            "--patterns-stdin",
+        ],
+    )
+    monkeypatch.setattr(
+        target=sys,
+        name="stdin",
+        value=StringIO(initial_value=filename + "::test_two\n"),
+    )
+    main()

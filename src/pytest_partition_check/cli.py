@@ -5,17 +5,27 @@ from __future__ import annotations
 import argparse
 import sys
 from collections import Counter
+from importlib.metadata import version
 from pathlib import Path
 
 from beartype import beartype
 
-from pytest_partition_check import PartitionError, check_partition
+from pytest_partition_check import (
+    NestedPytestError,
+    PartitionError,
+    check_partition,
+)
 
 
 @beartype
 def main() -> None:
     """Run the partition check and exit non-zero when it fails."""
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=version("pytest-partition-check"),
+    )
     parser.add_argument("patterns", nargs="*")
     parser.add_argument("--partition-patterns-path", type=Path)
     parser.add_argument(
@@ -35,11 +45,17 @@ def main() -> None:
             if line.strip() and not line.lstrip().startswith("#")
         )
     if arguments.partition_patterns_path is not None:
+        patterns_path = arguments.partition_patterns_path
+        if not patterns_path.is_absolute() and arguments.rootdir is not None:
+            patterns_path = arguments.rootdir / patterns_path
+        if not patterns_path.is_file():
+            parser.exit(
+                status=1,
+                message=f"Patterns file not found: {patterns_path}\n",
+            )
         patterns.extend(
             line.strip()
-            for line in arguments.partition_patterns_path.read_text(
-                encoding="utf-8"
-            ).splitlines()
+            for line in patterns_path.read_text(encoding="utf-8").splitlines()
             if line.strip() and not line.lstrip().startswith("#")
         )
     duplicates = sorted(
@@ -51,6 +67,8 @@ def main() -> None:
             status=1,
             message=f"Duplicate partition patterns:\n{formatted}\n",
         )
+    if not patterns:
+        parser.exit(status=1, message="no patterns provided\n")
     try:
         check_partition(
             patterns=patterns,
@@ -58,5 +76,5 @@ def main() -> None:
             disable_plugins=arguments.disable_plugin,
             extra_args=arguments.extra_arg,
         )
-    except PartitionError as error:
+    except (NestedPytestError, ValueError, PartitionError) as error:
         parser.exit(status=1, message=f"{error}\n")

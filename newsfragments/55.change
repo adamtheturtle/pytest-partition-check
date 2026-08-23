@@ -1,0 +1,1 @@
+Add a test that ``collect_node_ids`` defaults ``rootdir`` to the cwd.

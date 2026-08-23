@@ -1,0 +1,1 @@
+Skip partition checks when the outer test session already failed.
