@@ -242,6 +242,11 @@ template = "docs/towncrier_template.rst.jinja"
 title_format = "{version}"
 issue_format = "#{issue}"
 underlines = [ "-", "~", "^" ]
+# Setting ``ignore`` makes ``towncrier build`` fail on any file in
+# the fragment directory whose suffix is not a declared fragment
+# type, instead of silently dropping it.  Only the listed
+# non-fragment files are allowed through.
+ignore = [ ".gitkeep" ]
 type = [ { directory = "change", name = "", showcontent = true } ]
 
 [tool.pydocstringformatter]
