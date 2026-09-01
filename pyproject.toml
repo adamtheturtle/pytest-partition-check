@@ -54,7 +54,7 @@ optional-dependencies.dev = [
     "pytest==9.1.1",
     "pytest-split==0.11.0",
     "pytest-xdist==3.8.0",
-    "ruff==0.16.4",
+    "ruff==0.16.5",
     "shellcheck-py==0.11.0.1",
     "shfmt-py==4.0.0",
     "sphinx-lint==1.0.2",
