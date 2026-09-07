@@ -10,6 +10,7 @@ from pathlib import Path
 
 import pytest
 from beartype import beartype
+from typing_extensions import override
 
 _COLLECTION_MUTATING_PLUGINS = (
     "split",
@@ -48,6 +49,7 @@ class PartitionError(Exception):
         self.uncollected = uncollected
         super().__init__(self.__str__())
 
+    @override
     def __str__(self) -> str:
         """Return a stable, human-readable report of every problem."""
         lines = ["Patterns that matched no tests:"]
