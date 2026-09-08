@@ -15,7 +15,7 @@ from pytest_partition_check import (
 
 def _suite(*, pytester: pytest.Pytester) -> Path:
     """Create and return a small test suite root."""
-    pytester.makepyfile(
+    _ = pytester.makepyfile(
         test_alpha="""
         def test_one():
             pass
@@ -93,22 +93,29 @@ def test_extra_args_apply_post_deselection(
 def test_disable_plugins_is_honoured(*, pytester: pytest.Pytester) -> None:
     """Callers can disable a plugin that would break collection."""
     root = _suite(pytester=pytester)
-    pytester.makeconftest(
+    _ = pytester.makeconftest(
         source="""
         def pytest_collection_modifyitems(config, items):
             if config.pluginmanager.hasplugin("break_collection"):
                 raise RuntimeError("plugin remained active")
         """
     )
-    assert collect_node_ids(
-        pattern=".", rootdir=root, disable_plugins=("break_collection",)
+    assert (
+        len(
+            collect_node_ids(
+                pattern=".",
+                rootdir=root,
+                disable_plugins=("break_collection",),
+            )
+        )
+        > 0
     )
 
 
 def test_internal_error_is_loud(*, pytester: pytest.Pytester) -> None:
     """An internal collection error is not treated as no tests."""
     root = _suite(pytester=pytester)
-    pytester.makeconftest(
+    _ = pytester.makeconftest(
         source="""
         def pytest_collection(session):
             raise RuntimeError("broken collection")
@@ -117,7 +124,7 @@ def test_internal_error_is_loud(*, pytester: pytest.Pytester) -> None:
     with pytest.raises(
         expected_exception=NestedPytestError, match="INTERNAL_ERROR"
     ):
-        collect_node_ids(pattern=".", rootdir=root)
+        _ = collect_node_ids(pattern=".", rootdir=root)
 
 
 def test_pytest_split_is_disabled_by_default(
@@ -125,7 +132,7 @@ def test_pytest_split_is_disabled_by_default(
 ) -> None:
     """Active pytest-split configuration cannot truncate nested collection."""
     root = _suite(pytester=pytester)
-    pytester.makeini(source="[pytest]\naddopts = --splits 2 --group 1\n")
+    _ = pytester.makeini(source="[pytest]\naddopts = --splits 2 --group 1\n")
     assert collect_node_ids(pattern=".", rootdir=root) == {
         "test_alpha.py::test_one",
         "test_alpha.py::test_two",
@@ -155,18 +162,18 @@ def test_missing_rootdir_raises_value_error(*, tmp_path: Path) -> None:
     with pytest.raises(
         expected_exception=PatternValidationError, match="rootdir"
     ):
-        collect_node_ids(pattern="test_a.py", rootdir=missing)
+        _ = collect_node_ids(pattern="test_a.py", rootdir=missing)
 
 
 def test_full_suite_respects_testpaths(*, pytester: pytest.Pytester) -> None:
     """Omitting a path argument for the full suite honours testpaths."""
-    pytester.makepyfile(
+    _ = pytester.makepyfile(
         **{
             "tests/test_inside": "def test_inside():\n    pass\n",
             "test_outside": "def test_outside():\n    pass\n",
         }
     )
-    pytester.makefile(".ini", pytest="[pytest]\ntestpaths = tests\n")
+    _ = pytester.makefile(".ini", pytest="[pytest]\ntestpaths = tests\n")
     root = pytester.path
     assert collect_node_ids(pattern=None, rootdir=root) == {
         "tests/test_inside.py::test_inside",
@@ -236,7 +243,7 @@ def test_collection_modifyitems_is_observed(
 ) -> None:
     """Final node IDs include pytest_collection_modifyitems removals."""
     root = _suite(pytester=pytester)
-    pytester.makeconftest(
+    _ = pytester.makeconftest(
         source="""
         def pytest_collection_modifyitems(config, items):
             del items[1:]

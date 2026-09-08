@@ -5,7 +5,7 @@ import pytest
 
 def test_plugin_reports_failure(*, pytester: pytest.Pytester) -> None:
     """The plugin fails a session with the partition report."""
-    pytester.makepyfile(
+    _ = pytester.makepyfile(
         test_plugin_failure_sample="""
         def test_one():
             pass
@@ -29,14 +29,14 @@ def test_plugin_reports_failure(*, pytester: pytest.Pytester) -> None:
 
 def test_patterns_file_ini_option(*, pytester: pytest.Pytester) -> None:
     """The plugin reads patterns from the configured committed file."""
-    pytester.makepyfile(
+    _ = pytester.makepyfile(
         test_plugin_ini_sample="""
         def test_one():
             pass
         """
     )
-    pytester.makefile("", partition_patterns="test_plugin_ini_sample.py\n")
-    pytester.makeini(
+    _ = pytester.makefile("", partition_patterns="test_plugin_ini_sample.py\n")
+    _ = pytester.makeini(
         source="[pytest]\npartition_patterns_path = partition_patterns\n"
     )
     result = pytester.runpytest()
@@ -45,7 +45,7 @@ def test_patterns_file_ini_option(*, pytester: pytest.Pytester) -> None:
 
 def test_absolute_patterns_file_option(*, pytester: pytest.Pytester) -> None:
     """The command-line patterns path may be absolute."""
-    pytester.makepyfile(
+    _ = pytester.makepyfile(
         test_plugin_absolute_sample="""
         def test_one():
             pass
@@ -62,7 +62,7 @@ def test_plugin_forwards_disable_and_extra_args(
     *, pytester: pytest.Pytester
 ) -> None:
     """Plugin options reach nested collection."""
-    pytester.makepyfile(
+    _ = pytester.makepyfile(
         test_plugin_forward_sample="""
         def test_one():
             pass
@@ -84,7 +84,7 @@ def test_plugin_duplicate_patterns_across_sources(
     *, pytester: pytest.Pytester
 ) -> None:
     """Duplicates across CLI and patterns file fail the session."""
-    pytester.makepyfile(
+    _ = pytester.makepyfile(
         test_plugin_dup_sample="""
         def test_one():
             pass
@@ -105,7 +105,7 @@ def test_plugin_duplicate_patterns_across_sources(
 
 def test_plugin_missing_patterns_file(*, pytester: pytest.Pytester) -> None:
     """A missing patterns file fails the session with a clear summary."""
-    pytester.makepyfile(
+    _ = pytester.makepyfile(
         test_plugin_missing_sample="""
         def test_one():
             pass
@@ -120,13 +120,13 @@ def test_plugin_missing_patterns_file(*, pytester: pytest.Pytester) -> None:
 
 def test_plugin_nested_pytest_error(*, pytester: pytest.Pytester) -> None:
     """Nested collection failures are reported in the terminal summary."""
-    pytester.makepyfile(
+    _ = pytester.makepyfile(
         test_plugin_nested_sample="""
         def test_one():
             pass
         """
     )
-    pytester.makeconftest(
+    _ = pytester.makeconftest(
         source="""
         def pytest_collection(session):
             if session.config.option.collectonly:
@@ -147,7 +147,7 @@ def test_plugin_nested_pytest_error(*, pytester: pytest.Pytester) -> None:
 
 def test_plugin_skips_collect_only(*, pytester: pytest.Pytester) -> None:
     """Partition checks are skipped during --collect-only."""
-    pytester.makepyfile(
+    _ = pytester.makepyfile(
         test_plugin_collect_only_sample="""
         def test_one():
             pass
@@ -168,7 +168,7 @@ def test_plugin_skips_when_tests_failed(*, pytester: pytest.Pytester) -> None:
     """Partition checks are skipped when the outer session already
     failed.
     """
-    pytester.makepyfile(
+    _ = pytester.makepyfile(
         test_plugin_failed_outer_sample="""
         def test_one():
             assert False
@@ -188,7 +188,7 @@ def test_plugin_success_multiple_patterns(
     *, pytester: pytest.Pytester
 ) -> None:
     """Multiple valid --check-partition patterns succeed silently."""
-    pytester.makepyfile(
+    _ = pytester.makepyfile(
         test_plugin_multi_sample="""
         def test_one():
             pass
@@ -210,7 +210,7 @@ def test_plugin_ini_extra_args_use_shell_splitting(
     *, pytester: pytest.Pytester
 ) -> None:
     """The partition_extra_args ini option preserves quoted tokens."""
-    pytester.makepyfile(
+    _ = pytester.makepyfile(
         test_plugin_ini_extra_args_sample="""
         import pytest
 
@@ -222,7 +222,7 @@ def test_plugin_ini_extra_args_use_shell_splitting(
             pass
         """
     )
-    pytester.makeini(
+    _ = pytester.makeini(
         source=(
             "[pytest]\n"
             "markers =\n"
