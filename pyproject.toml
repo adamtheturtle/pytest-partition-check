@@ -215,6 +215,7 @@ plugins = [ "mypy_strict_kwargs" ]
 [tool.pyrefly]
 search_path = [ ".", "src" ]
 errors.non-exhaustive-match = "error"
+enabled-ignores = [ "pyrefly" ]
 preset = "all"
 
 [tool.pyright]
