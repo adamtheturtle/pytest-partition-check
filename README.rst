@@ -11,9 +11,7 @@ One shard may need Docker, another may use secrets or a special runner, and anot
 Their patterns are a deliberate, human-owned artefact.
 Pytest, workflow linting, and coverage do not report empty, overlapping, or missing shards.
 
-The closest project is `pytest-split`_.
-It owns the split: users commit a ``.test_durations`` file and run ``pytest --splits N --group K``.
-Related tools include `pytest-shard`_ and pytest-xdist's distribution modes.
+The closest project is `pytest-split`_. It owns the split: users commit a ``.test_durations`` file and run ``pytest --splits N --group K``. Related tools include `pytest-shard`_ and pytest-xdist's distribution modes.
 This package instead checks hand-maintained node-ID patterns without replacing them.
 
 .. _pytest-split: https://pypi.org/project/pytest-split/
