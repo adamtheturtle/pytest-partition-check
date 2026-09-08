@@ -12,7 +12,7 @@ from pytest_partition_check.cli import main
 
 def _write_suite(*, root: Path, filename: str) -> None:
     """Write a small suite for CLI testing."""
-    (root / filename).write_text(
+    _ = (root / filename).write_text(
         data="def test_one():\n    pass\n\ndef test_two():\n    pass\n",
         encoding="utf-8",
     )
@@ -66,7 +66,9 @@ def test_cli_patterns_file(
     filename = "test_cli_file_sample.py"
     _write_suite(root=tmp_path, filename=filename)
     patterns = tmp_path / "patterns"
-    patterns.write_text(data=f"# shard list\n\n{filename}\n", encoding="utf-8")
+    _ = patterns.write_text(
+        data=f"# shard list\n\n{filename}\n", encoding="utf-8"
+    )
     monkeypatch.setattr(
         target=sys,
         name="argv",
@@ -213,7 +215,7 @@ def test_cli_nested_pytest_error(
     """
     filename = "test_cli_nested_sample.py"
     _write_suite(root=tmp_path, filename=filename)
-    (tmp_path / "conftest.py").write_text(
+    _ = (tmp_path / "conftest.py").write_text(
         data=(
             "def pytest_collection(session):\n"
             '    raise RuntimeError("broken collection")\n'
@@ -251,7 +253,9 @@ def test_cli_relative_patterns_path_uses_rootdir(
     """Relative patterns paths resolve against --rootdir."""
     filename = "test_cli_rel_patterns_sample.py"
     _write_suite(root=tmp_path, filename=filename)
-    (tmp_path / "patterns").write_text(data=filename + "\n", encoding="utf-8")
+    _ = (tmp_path / "patterns").write_text(
+        data=filename + "\n", encoding="utf-8"
+    )
     monkeypatch.chdir(path=tmp_path / "..")
     monkeypatch.setattr(
         target=sys,

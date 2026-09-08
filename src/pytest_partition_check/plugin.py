@@ -80,10 +80,16 @@ def _patterns(*, config: pytest.Config) -> tuple[str, ...]:
         msg = "pytest returned an invalid --check-partition value"
         raise TypeError(msg)
     direct = tuple(direct_value)
-    path_value: str = config.getoption(
-        name="partition_patterns_path"
-    ) or config.getini(name="partition_patterns_path")
-    if not path_value:
+    cli_path = config.getoption(name="partition_patterns_path")
+    ini_path = config.getini(name="partition_patterns_path")
+    if isinstance(cli_path, str) and cli_path != "":
+        path_value = cli_path
+    elif isinstance(ini_path, str):
+        path_value = ini_path
+    else:  # pragma: no cover
+        msg = "pytest returned an invalid partition patterns path"
+        raise TypeError(msg)
+    if path_value == "":
         return direct
     path = Path(path_value)
     if not path.is_absolute():
@@ -94,7 +100,7 @@ def _patterns(*, config: pytest.Config) -> tuple[str, ...]:
     file_patterns = tuple(
         line.strip()
         for line in path.read_text(encoding="utf-8").splitlines()
-        if line.strip() and not line.lstrip().startswith("#")
+        if line.strip() != "" and not line.lstrip().startswith("#")
     )
     return (*direct, *file_patterns)
 
@@ -110,7 +116,7 @@ def _disable_plugins(*, config: pytest.Config) -> tuple[str, ...]:
     ini_plugins = tuple(
         part.strip()
         for part in str(object=ini_value).split(sep=",")
-        if part.strip()
+        if part.strip() != ""
     )
     return (*tuple(cli_value), *ini_plugins)
 
@@ -123,7 +129,9 @@ def _extra_args(*, config: pytest.Config) -> tuple[str, ...]:
         msg = "pytest returned an invalid --partition-extra-arg value"
         raise TypeError(msg)
     ini_value = config.getini(name="partition_extra_args")
-    ini_args = tuple(shlex.split(s=str(object=ini_value))) if ini_value else ()
+    ini_args = (
+        tuple(shlex.split(s=str(object=ini_value))) if ini_value != "" else ()
+    )
     return (*tuple(cli_value), *ini_args)
 
 
@@ -141,7 +149,7 @@ def pytest_sessionfinish(
         session.config.stash[_PARTITION_ERROR] = error
         session.exitstatus = pytest.ExitCode.TESTS_FAILED
         return
-    if not patterns:
+    if len(patterns) == 0:
         return
     try:
         check_partition(

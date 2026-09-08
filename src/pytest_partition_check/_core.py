@@ -10,6 +10,7 @@ from pathlib import Path
 
 import pytest
 from beartype import beartype
+from typing_extensions import override
 
 _COLLECTION_MUTATING_PLUGINS = (
     "split",
@@ -48,23 +49,24 @@ class PartitionError(Exception):
         self.uncollected = uncollected
         super().__init__(self.__str__())
 
+    @override
     def __str__(self) -> str:
         """Return a stable, human-readable report of every problem."""
         lines = ["Patterns that matched no tests:"]
         lines.extend(
             f"  {pattern}" for pattern in sorted(self.unmatched_patterns)
         )
-        if not self.unmatched_patterns:
+        if len(self.unmatched_patterns) == 0:
             lines.append("  (none)")
         lines.append("Tests collected by more than one pattern:")
         for node_id in sorted(self.overlapping):
             patterns = ", ".join(sorted(self.overlapping[node_id]))
             lines.append(f"  {node_id}: {patterns}")
-        if not self.overlapping:
+        if len(self.overlapping) == 0:
             lines.append("  (none)")
         lines.append("Tests in the full suite that no pattern collects:")
         lines.extend(f"  {node_id}" for node_id in sorted(self.uncollected))
-        if not self.uncollected:
+        if len(self.uncollected) == 0:
             lines.append("  (none)")
         return "\n".join(lines)
 
@@ -105,10 +107,10 @@ def _absolute_pattern(*, pattern: str, rootdir: Path) -> str:
     ``rootdir``.
     """
     path_part, separator, rest = pattern.partition("::")
-    if not path_part:
+    if path_part == "":
         return pattern
     absolute = str(object=(rootdir / path_part).resolve())
-    if separator:
+    if separator != "":
         return f"{absolute}{separator}{rest}"
     return absolute
 
@@ -186,10 +188,10 @@ def check_partition(
     suite.
     """
     pattern_list = tuple(pattern.strip() for pattern in patterns)
-    if not pattern_list:
+    if len(pattern_list) == 0:
         message = "no patterns provided"
         raise PatternValidationError(message)
-    if any(not pattern for pattern in pattern_list):
+    if any(pattern == "" for pattern in pattern_list):
         message = "patterns must be non-empty after stripping whitespace"
         raise PatternValidationError(message)
     duplicates = sorted(
@@ -197,7 +199,7 @@ def check_partition(
         for pattern, count in Counter(pattern_list).items()
         if count > 1
     )
-    if duplicates:
+    if len(duplicates) > 0:
         formatted = ", ".join(duplicates)
         message = f"duplicate partition patterns: {formatted}"
         raise PatternValidationError(message)
@@ -225,7 +227,7 @@ def check_partition(
     unmatched = frozenset(
         pattern
         for pattern, node_ids in collected_by_pattern.items()
-        if not node_ids
+        if len(node_ids) == 0
     )
     overlapping = {
         node_id: frozenset(matched_patterns)
@@ -233,7 +235,7 @@ def check_partition(
         if len(matched_patterns) > 1
     }
     uncollected = full_suite.difference(matched_by)
-    if unmatched or overlapping or uncollected:
+    if len(unmatched) > 0 or len(overlapping) > 0 or len(uncollected) > 0:
         raise PartitionError(
             unmatched_patterns=unmatched,
             overlapping=overlapping,

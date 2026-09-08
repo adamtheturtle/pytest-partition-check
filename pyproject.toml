@@ -29,6 +29,7 @@ dynamic = [ "version" ]
 dependencies = [
     "beartype>=0.22.9",
     "pytest>=8",
+    "typing-extensions>=4.4",
 ]
 optional-dependencies.dev = [
     "actionlint-py==1.7.12.24",
@@ -213,6 +214,7 @@ plugins = [ "mypy_strict_kwargs" ]
 [tool.pyrefly]
 search_path = [ ".", "src" ]
 errors.non-exhaustive-match = "error"
+preset = "all"
 
 [tool.pyright]
 typeCheckingMode = "strict"
