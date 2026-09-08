@@ -106,6 +106,7 @@ lint.explicit-preview-rules = true
 lint.per-file-ignores."tests/**" = [ "S101" ]
 lint.unfixable = [ "ERA001" ]
 lint.external = [ "NOD" ]
+lint.flake8-tidy-imports.banned-api."operator.attrgetter".msg = "operator.attrgetter is banned: use a lambda instead."
 lint.flake8-tidy-imports.banned-api."typing.cast".msg = """\
     typing.cast is banned: use explicit type narrowing or a typed variable instead.\
     """
