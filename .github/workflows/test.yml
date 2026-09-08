@@ -32,15 +32,15 @@ jobs:
             **/pyproject.toml
             **/uv.lock
       - name: Run tests
-        run: uv run --extra=dev coverage run -m pytest -vvv --showlocals
+        run: uv run --group=dev coverage run -m pytest -vvv --showlocals
         env:
           UV_PYTHON: ${{ matrix.python-version }}
       - name: Combine coverage data
         if: always()
-        run: uv run --extra=dev coverage combine
+        run: uv run --group=dev coverage combine
       - name: Report coverage
         if: always()
-        run: uv run --extra=dev coverage report
+        run: uv run --group=dev coverage report
       - name: Upload coverage artifact
         if: always()
         uses: actions/upload-artifact@v7

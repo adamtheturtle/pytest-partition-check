@@ -33,12 +33,12 @@ jobs:
       - name: Generate release notes
         env:
           RELEASE: ${{ steps.calver.outputs.release }}
-        run: uv run --extra=release towncrier build --draft --version "$RELEASE" >
+        run: uv run --group=release towncrier build --draft --version "$RELEASE" >
           release-notes.md
       - name: Update changelog
         env:
           RELEASE: ${{ steps.calver.outputs.release }}
-        run: uv run --extra=release towncrier build --yes --version "$RELEASE"
+        run: uv run --group=release towncrier build --yes --version "$RELEASE"
       - name: Open changelog pull request
         id: changelog_pr
         env:
@@ -106,7 +106,7 @@ jobs:
           persist-credentials: false
       - uses: astral-sh/setup-uv@v10.0.1
       - name: Run tests
-        run: uv run --extra=dev pytest -vvv --showlocals
+        run: uv run --group=dev pytest -vvv --showlocals
   pypi:
     if: github.event_name == 'release'
     needs: [test]
@@ -124,7 +124,7 @@ jobs:
       - name: Build distributions
         run: |-
           uv build --sdist --wheel --out-dir dist/
-          uv run --extra=release check-wheel-contents dist/*.whl
+          uv run --group=release check-wheel-contents dist/*.whl
       - uses: pypa/gh-action-pypi-publish@release/v1
         with:
           verbose: true
