@@ -4,12 +4,10 @@ from __future__ import annotations
 
 import shlex
 from pathlib import Path
-from typing import TypeGuard
 
 import pytest
 from _pytest.terminal import TerminalReporter
 from beartype import beartype
-from beartype.door import TypeHint
 
 from pytest_partition_check import (
     NestedPytestError,
@@ -17,12 +15,6 @@ from pytest_partition_check import (
     PatternValidationError,
     check_partition,
 )
-
-
-@beartype
-def _is_string_list(value: object) -> TypeGuard[list[str]]:
-    """Return whether a value is a list containing only strings."""
-    return TypeHint(hint=list[str]).is_bearable(obj=value)
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -76,19 +68,13 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 def _patterns(*, config: pytest.Config) -> tuple[str, ...]:
     """Return patterns configured on the command line or in a file."""
     direct_value = config.getoption(name="check_partition")
-    if not _is_string_list(value=direct_value):  # pragma: no cover
-        msg = "pytest returned an invalid --check-partition value"
-        raise TypeError(msg)
-    direct = tuple(direct_value)
-    cli_path = config.getoption(name="partition_patterns_path")
-    ini_path = config.getini(name="partition_patterns_path")
-    if isinstance(cli_path, str) and cli_path != "":
-        path_value = cli_path
-    elif isinstance(ini_path, str):
+    direct = tuple(str(object=value) for value in direct_value or ())
+    cli_path_value = config.getoption(name="partition_patterns_path")
+    ini_path = str(object=config.getini(name="partition_patterns_path"))
+    if cli_path_value is not None and cli_path_value != "":
+        path_value = str(object=cli_path_value)
+    else:
         path_value = ini_path
-    else:  # pragma: no cover
-        msg = "pytest returned an invalid partition patterns path"
-        raise TypeError(msg)
     if path_value == "":
         return direct
     path = Path(path_value)
@@ -109,30 +95,30 @@ def _patterns(*, config: pytest.Config) -> tuple[str, ...]:
 def _disable_plugins(*, config: pytest.Config) -> tuple[str, ...]:
     """Return plugins to disable during nested collection."""
     cli_value = config.getoption(name="partition_disable_plugin")
-    if not _is_string_list(value=cli_value):  # pragma: no cover
-        msg = "pytest returned an invalid --partition-disable-plugin value"
-        raise TypeError(msg)
-    ini_value = config.getini(name="partition_disable_plugins")
+    ini_value = str(object=config.getini(name="partition_disable_plugins"))
     ini_plugins = tuple(
         part.strip()
         for part in str(object=ini_value).split(sep=",")
         if part.strip() != ""
     )
-    return (*tuple(cli_value), *ini_plugins)
+    return (
+        *(str(object=value) for value in cli_value or ()),
+        *ini_plugins,
+    )
 
 
 @beartype
 def _extra_args(*, config: pytest.Config) -> tuple[str, ...]:
     """Return extra args for nested collection."""
     cli_value = config.getoption(name="partition_extra_arg")
-    if not _is_string_list(value=cli_value):  # pragma: no cover
-        msg = "pytest returned an invalid --partition-extra-arg value"
-        raise TypeError(msg)
-    ini_value = config.getini(name="partition_extra_args")
+    ini_value = str(object=config.getini(name="partition_extra_args"))
     ini_args = (
         tuple(shlex.split(s=str(object=ini_value))) if ini_value != "" else ()
     )
-    return (*tuple(cli_value), *ini_args)
+    return (
+        *(str(object=value) for value in cli_value or ()),
+        *ini_args,
+    )
 
 
 def pytest_sessionfinish(

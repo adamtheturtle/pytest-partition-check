@@ -1,0 +1,1 @@
+Express the registered pytest option types as invariants rather than unreachable coverage exclusions.
