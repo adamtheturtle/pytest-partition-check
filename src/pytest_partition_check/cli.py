@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import argparse
 import sys
 from collections import Counter
-from importlib.metadata import version
 from pathlib import Path
 
+import click
 from beartype import beartype
 
 from pytest_partition_check import (
@@ -18,72 +17,75 @@ from pytest_partition_check import (
 )
 
 
+@click.command(name="pytest-check-partition")
+@click.version_option(package_name="pytest-partition-check")
+@click.argument("patterns", nargs=-1)
+@click.option(
+    "--partition-patterns-path",
+    type=click.Path(path_type=Path),
+)
+@click.option(
+    "--patterns-stdin",
+    is_flag=True,
+    help="Read one partition pattern per line from standard input.",
+)
+@click.option("--rootdir", type=click.Path(path_type=Path))
+@click.option("-p", "--disable-plugin", multiple=True)
+@click.option("--extra-arg", multiple=True)
 @beartype
-def main() -> None:
+def main(
+    *,
+    patterns: tuple[str, ...],
+    partition_patterns_path: Path | None,
+    patterns_stdin: bool,
+    rootdir: Path | None,
+    disable_plugin: tuple[str, ...],
+    extra_arg: tuple[str, ...],
+) -> None:
     """Run the partition check and exit non-zero when it fails."""
-    parser = argparse.ArgumentParser()
-    _ = parser.add_argument(
-        "--version",
-        action="version",
-        version=version(distribution_name="pytest-partition-check"),
-    )
-    _ = parser.add_argument("patterns", nargs="*")
-    _ = parser.add_argument("--partition-patterns-path", type=Path)
-    _ = parser.add_argument(
-        "--patterns-stdin",
-        action="store_true",
-        help="Read one partition pattern per line from standard input.",
-    )
-    _ = parser.add_argument("--rootdir", type=Path)
-    _ = parser.add_argument(
-        "-p", "--disable-plugin", action="append", default=[]
-    )
-    _ = parser.add_argument("--extra-arg", action="append", default=[])
-    arguments = parser.parse_args()
-    patterns = list(arguments.patterns)
-    if arguments.patterns_stdin is True:
-        patterns.extend(
+    all_patterns = list(patterns)
+    if patterns_stdin is True:
+        all_patterns.extend(
             line.strip()
             for line in sys.stdin
             if line.strip() != "" and not line.lstrip().startswith("#")
         )
-    if arguments.partition_patterns_path is not None:
-        patterns_path = Path(str(object=arguments.partition_patterns_path))
-        if not patterns_path.is_absolute() and arguments.rootdir is not None:
-            rootdir = Path(str(object=arguments.rootdir))
+    if partition_patterns_path is not None:
+        patterns_path = partition_patterns_path
+        if not patterns_path.is_absolute() and rootdir is not None:
             patterns_path = rootdir / patterns_path
         if not patterns_path.is_file():
-            parser.exit(
-                status=1,
-                message=f"Patterns file not found: {patterns_path}\n",
+            raise click.ClickException(
+                message=f"Patterns file not found: {patterns_path}",
             )
-        patterns.extend(
+        all_patterns.extend(
             line.strip()
             for line in patterns_path.read_text(encoding="utf-8").splitlines()
             if line.strip() != "" and not line.lstrip().startswith("#")
         )
-    patterns = [pattern.strip() for pattern in patterns]
+    all_patterns = [pattern.strip() for pattern in all_patterns]
     duplicates = sorted(
-        pattern for pattern, count in Counter(patterns).items() if count > 1
+        pattern
+        for pattern, count in Counter(all_patterns).items()
+        if count > 1
     )
     if len(duplicates) > 0:
         formatted = "\n".join(f"  {pattern}" for pattern in duplicates)
-        parser.exit(
-            status=1,
-            message=f"Duplicate partition patterns:\n{formatted}\n",
+        raise click.ClickException(
+            message=f"Duplicate partition patterns:\n{formatted}",
         )
-    if len(patterns) == 0:
-        parser.exit(status=1, message="no patterns provided\n")
+    if len(all_patterns) == 0:
+        raise click.ClickException(message="no patterns provided")
     try:
         check_partition(
-            patterns=patterns,
-            rootdir=arguments.rootdir,
-            disable_plugins=arguments.disable_plugin,
-            extra_args=arguments.extra_arg,
+            patterns=all_patterns,
+            rootdir=rootdir,
+            disable_plugins=disable_plugin,
+            extra_args=extra_arg,
         )
     except (
         NestedPytestError,
         PatternValidationError,
         PartitionError,
     ) as error:
-        parser.exit(status=1, message=f"{error}\n")
+        raise click.ClickException(message=str(object=error)) from error

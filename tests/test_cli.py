@@ -1,10 +1,9 @@
 """Tests for the standalone command-line interface."""
 
-import sys
-from io import StringIO
 from pathlib import Path
 
 import pytest
+from click.testing import CliRunner
 
 from pytest_partition_check import PartitionError
 from pytest_partition_check.cli import main
@@ -18,48 +17,35 @@ def _write_suite(*, root: Path, filename: str) -> None:
     )
 
 
-def test_cli_success(
-    *, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
+def test_cli_success(*, runner: CliRunner, tmp_path: Path) -> None:
     """The CLI returns normally for a valid partition."""
     filename = "test_cli_success_sample.py"
     _write_suite(root=tmp_path, filename=filename)
-    monkeypatch.setattr(
-        target=sys,
-        name="argv",
-        value=[
-            "pytest-check-partition",
+    result = runner.invoke(
+        cli=main,
+        args=[
             "--rootdir",
             str(object=tmp_path),
             filename,
         ],
     )
-    main()
+    assert result.exit_code == 0, result.output
 
 
-def test_cli_failure(
-    *, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
+def test_cli_failure(*, runner: CliRunner, tmp_path: Path) -> None:
     """The CLI exits one and prints the shared report on failure."""
     filename = "test_cli_failure_sample.py"
     _write_suite(root=tmp_path, filename=filename)
-    monkeypatch.setattr(
-        target=sys,
-        name="argv",
-        value=[
-            "pytest-check-partition",
-            "--rootdir",
-            str(object=tmp_path),
-            f"{filename}::test_one",
-        ],
-    )
-    with pytest.raises(expected_exception=SystemExit, match="1"):
-        main()
+    args = [
+        "--rootdir",
+        str(object=tmp_path),
+        f"{filename}::test_one",
+    ]
+    result = runner.invoke(cli=main, args=args)
+    assert result.exit_code == 1
 
 
-def test_cli_patterns_file(
-    *, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
+def test_cli_patterns_file(*, runner: CliRunner, tmp_path: Path) -> None:
     """The CLI reads a committed patterns file and accepts extra
     options.
     """
@@ -69,11 +55,9 @@ def test_cli_patterns_file(
     _ = patterns.write_text(
         data=f"# shard list\n\n{filename}\n", encoding="utf-8"
     )
-    monkeypatch.setattr(
-        target=sys,
-        name="argv",
-        value=[
-            "pytest-check-partition",
+    result = runner.invoke(
+        cli=main,
+        args=[
             "--rootdir",
             str(object=tmp_path),
             "--partition-patterns-path",
@@ -83,67 +67,47 @@ def test_cli_patterns_file(
             "--extra-arg=--disable-warnings",
         ],
     )
-    main()
+    assert result.exit_code == 0, result.output
 
 
-def test_cli_patterns_stdin(
-    *, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
+def test_cli_patterns_stdin(*, runner: CliRunner, tmp_path: Path) -> None:
     """The CLI reads newline-delimited patterns from standard input."""
     filename = "test_cli_stdin_sample.py"
     _write_suite(root=tmp_path, filename=filename)
-    monkeypatch.setattr(
-        target=sys,
-        name="argv",
-        value=[
-            "pytest-check-partition",
+    result = runner.invoke(
+        cli=main,
+        args=[
             "--rootdir",
             str(object=tmp_path),
             "--patterns-stdin",
         ],
+        input=f"# shard list\n\n{filename}\n",
     )
-    monkeypatch.setattr(
-        target=sys,
-        name="stdin",
-        value=StringIO(initial_value=f"# shard list\n\n{filename}\n"),
-    )
-    main()
+    assert result.exit_code == 0, result.output
 
 
-def test_cli_duplicate_patterns(
-    *, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
+def test_cli_duplicate_patterns(*, runner: CliRunner, tmp_path: Path) -> None:
     """The CLI rejects duplicate patterns."""
     filename = "test_cli_duplicate_sample.py"
     _write_suite(root=tmp_path, filename=filename)
-    monkeypatch.setattr(
-        target=sys,
-        name="argv",
-        value=["pytest-check-partition", filename, filename],
-    )
-    with pytest.raises(expected_exception=SystemExit, match="1"):
-        main()
+    result = runner.invoke(cli=main, args=[filename, filename])
+    assert result.exit_code == 1
 
 
 def test_cli_whitespace_duplicate_patterns(
-    *, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    *, runner: CliRunner, tmp_path: Path
 ) -> None:
     """The CLI rejects patterns that differ only by surrounding whitespace."""
     filename = "test_cli_ws_dup_sample.py"
     _write_suite(root=tmp_path, filename=filename)
-    monkeypatch.setattr(
-        target=sys,
-        name="argv",
-        value=[
-            "pytest-check-partition",
-            "--rootdir",
-            str(object=tmp_path),
-            filename,
-            f" {filename} ",
-        ],
-    )
-    with pytest.raises(expected_exception=SystemExit, match="1"):
-        main()
+    args = [
+        "--rootdir",
+        str(object=tmp_path),
+        filename,
+        f" {filename} ",
+    ]
+    result = runner.invoke(cli=main, args=args)
+    assert result.exit_code == 1
 
 
 def test_empty_partition_error_message() -> None:
@@ -158,58 +122,39 @@ def test_empty_partition_error_message() -> None:
     assert error.args == (str(object=error),)
 
 
-def test_cli_empty_patterns(*, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_cli_empty_patterns(*, runner: CliRunner) -> None:
     """The CLI rejects an empty pattern list."""
-    monkeypatch.setattr(
-        target=sys,
-        name="argv",
-        value=["pytest-check-partition"],
-    )
-    with pytest.raises(expected_exception=SystemExit, match="1"):
-        main()
+    result = runner.invoke(cli=main)
+    assert result.exit_code == 1
 
 
-def test_cli_whitespace_pattern(
-    *, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
+def test_cli_whitespace_pattern(*, runner: CliRunner, tmp_path: Path) -> None:
     """The CLI surfaces core validation errors for blank patterns."""
     filename = "test_cli_blank_sample.py"
     _write_suite(root=tmp_path, filename=filename)
-    monkeypatch.setattr(
-        target=sys,
-        name="argv",
-        value=[
-            "pytest-check-partition",
-            "--rootdir",
-            str(object=tmp_path),
-            "   ",
-        ],
-    )
-    with pytest.raises(expected_exception=SystemExit, match="1"):
-        main()
+    args = [
+        "--rootdir",
+        str(object=tmp_path),
+        "   ",
+    ]
+    result = runner.invoke(cli=main, args=args)
+    assert result.exit_code == 1
 
 
 def test_cli_missing_patterns_file(
-    *, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    *, runner: CliRunner, tmp_path: Path
 ) -> None:
     """The CLI exits cleanly when the patterns file is missing."""
     missing = tmp_path / "missing-patterns"
-    monkeypatch.setattr(
-        target=sys,
-        name="argv",
-        value=[
-            "pytest-check-partition",
-            "--partition-patterns-path",
-            str(object=missing),
-        ],
-    )
-    with pytest.raises(expected_exception=SystemExit, match="1"):
-        main()
+    args = [
+        "--partition-patterns-path",
+        str(object=missing),
+    ]
+    result = runner.invoke(cli=main, args=args)
+    assert result.exit_code == 1
 
 
-def test_cli_nested_pytest_error(
-    *, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
+def test_cli_nested_pytest_error(*, runner: CliRunner, tmp_path: Path) -> None:
     """Nested collection failures exit one without an uncaught
     traceback.
     """
@@ -222,33 +167,24 @@ def test_cli_nested_pytest_error(
         ),
         encoding="utf-8",
     )
-    monkeypatch.setattr(
-        target=sys,
-        name="argv",
-        value=[
-            "pytest-check-partition",
-            "--rootdir",
-            str(object=tmp_path),
-            filename,
-        ],
-    )
-    with pytest.raises(expected_exception=SystemExit, match="1"):
-        main()
+    args = [
+        "--rootdir",
+        str(object=tmp_path),
+        filename,
+    ]
+    result = runner.invoke(cli=main, args=args)
+    assert result.exit_code == 1
 
 
-def test_cli_version(*, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_cli_version(*, runner: CliRunner) -> None:
     """The CLI prints the installed package version."""
-    monkeypatch.setattr(
-        target=sys,
-        name="argv",
-        value=["pytest-check-partition", "--version"],
-    )
-    with pytest.raises(expected_exception=SystemExit, match="0"):
-        main()
+    result = runner.invoke(cli=main, args=["--version"])
+    assert result.exit_code == 0
+    assert "pytest-check-partition" in result.output
 
 
 def test_cli_relative_patterns_path_uses_rootdir(
-    *, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    *, monkeypatch: pytest.MonkeyPatch, runner: CliRunner, tmp_path: Path
 ) -> None:
     """Relative patterns paths resolve against --rootdir."""
     filename = "test_cli_rel_patterns_sample.py"
@@ -257,40 +193,32 @@ def test_cli_relative_patterns_path_uses_rootdir(
         data=filename + "\n", encoding="utf-8"
     )
     monkeypatch.chdir(path=tmp_path / "..")
-    monkeypatch.setattr(
-        target=sys,
-        name="argv",
-        value=[
-            "pytest-check-partition",
+    result = runner.invoke(
+        cli=main,
+        args=[
             "--rootdir",
             str(object=tmp_path),
             "--partition-patterns-path",
             "patterns",
         ],
     )
-    main()
+    assert result.exit_code == 0, result.output
 
 
 def test_cli_stdin_and_positional_patterns(
-    *, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    *, runner: CliRunner, tmp_path: Path
 ) -> None:
     """Positional patterns merge with --patterns-stdin lines."""
     filename = "test_cli_merge_sample.py"
     _write_suite(root=tmp_path, filename=filename)
-    monkeypatch.setattr(
-        target=sys,
-        name="argv",
-        value=[
-            "pytest-check-partition",
+    result = runner.invoke(
+        cli=main,
+        args=[
             "--rootdir",
             str(object=tmp_path),
             f"{filename}::test_one",
             "--patterns-stdin",
         ],
+        input=filename + "::test_two\n",
     )
-    monkeypatch.setattr(
-        target=sys,
-        name="stdin",
-        value=StringIO(initial_value=filename + "::test_two\n"),
-    )
-    main()
+    assert result.exit_code == 0, result.output
