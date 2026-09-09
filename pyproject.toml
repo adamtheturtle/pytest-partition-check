@@ -28,6 +28,7 @@ classifiers = [
 dynamic = [ "version" ]
 dependencies = [
     "beartype>=0.22.9",
+    "click>=8.5",
     "pytest>=8",
     "typing-extensions>=4.4",
 ]
@@ -45,7 +46,7 @@ dev = [
     "coverage==7.16.0",
     "deptry==0.25.1",
     "doc8==2.0.0",
-    "doccmd==2026.8.16; python_version>='3.11'",
+    "doccmd==2026.9.1; python_version>='3.11'",
     "interrogate==1.7.0",
     "mypy[faster-cache]==2.3.1",
     "mypy-strict-kwargs==2026.8.25.1; python_version>='3.11'",
