@@ -17,6 +17,7 @@ from pytest_partition_check import (
 )
 
 
+@beartype
 def pytest_addoption(parser: pytest.Parser) -> None:
     """Register command-line and configuration options."""
     group = parser.getgroup(name="partition-check")
@@ -121,6 +122,7 @@ def _extra_args(*, config: pytest.Config) -> tuple[str, ...]:
     )
 
 
+@beartype
 def pytest_sessionfinish(
     session: pytest.Session, exitstatus: int | pytest.ExitCode
 ) -> None:
@@ -156,6 +158,7 @@ def pytest_sessionfinish(
 _PARTITION_ERROR = pytest.StashKey[BaseException]()
 
 
+@beartype
 def pytest_terminal_summary(
     terminalreporter: TerminalReporter, exitstatus: int
 ) -> None:
