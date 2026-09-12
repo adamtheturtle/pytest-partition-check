@@ -30,10 +30,10 @@ class PatternValidationError(ValueError):
     """The given partition patterns are invalid."""
 
 
+@beartype
 class PartitionError(Exception):
     """The given patterns do not partition the test suite."""
 
-    @beartype
     def __init__(
         self,
         *,
@@ -71,6 +71,7 @@ class PartitionError(Exception):
         return "\n".join(lines)
 
 
+@beartype
 class _CollectionRecorder:
     """Record the final item list after collection hooks and
     deselection.
