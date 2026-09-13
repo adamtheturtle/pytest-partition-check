@@ -183,9 +183,12 @@ ignore = [
     "LICENSE",
     "newsfragments",
     "newsfragments/**",
+    "prek.toml",
     "spelling_private_dict.txt",
+    "styles/snapper/*.yml",
     "tests",
     "tests/**",
+    "zizmor.yml",
 ]
 
 [tool.deptry]
