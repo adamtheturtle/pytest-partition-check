@@ -1,5 +1,6 @@
 """Tests for the standalone command-line interface."""
 
+from importlib.metadata import version
 from pathlib import Path
 
 import pytest
@@ -180,7 +181,10 @@ def test_cli_version(*, runner: CliRunner) -> None:
     """The CLI prints the installed package version."""
     result = runner.invoke(cli=main, args=["--version"])
     assert result.exit_code == 0
-    assert "pytest-check-partition" in result.output
+    package_version = version(distribution_name="pytest-partition-check")
+    assert result.output == (
+        f"pytest-check-partition, version {package_version}\n"
+    )
 
 
 def test_cli_relative_patterns_path_uses_rootdir(
