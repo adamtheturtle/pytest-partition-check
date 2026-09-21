@@ -178,6 +178,35 @@ def collect_node_ids(
 
 
 @beartype
+def _find_partition_problems(
+    *,
+    collected_by_pattern: Mapping[str, frozenset[str]],
+    full_suite: frozenset[str],
+) -> tuple[
+    frozenset[str],
+    dict[str, frozenset[str]],
+    frozenset[str],
+]:
+    """Classify every way collected patterns fail to partition a suite."""
+    matched_by: defaultdict[str, set[str]] = defaultdict(set)
+    for pattern, node_ids in collected_by_pattern.items():
+        for node_id in node_ids:
+            matched_by[node_id].add(pattern)
+    unmatched = frozenset(
+        pattern
+        for pattern, node_ids in collected_by_pattern.items()
+        if len(node_ids) == 0
+    )
+    overlapping = {
+        node_id: frozenset(matched_patterns)
+        for node_id, matched_patterns in matched_by.items()
+        if len(matched_patterns) > 1
+    }
+    uncollected = full_suite.difference(matched_by)
+    return unmatched, overlapping, uncollected
+
+
+@beartype
 def check_partition(
     *,
     patterns: Iterable[str],
@@ -221,21 +250,10 @@ def check_partition(
         disable_plugins=disabled,
         extra_args=arguments,
     )
-    matched_by: defaultdict[str, set[str]] = defaultdict(set)
-    for pattern, node_ids in collected_by_pattern.items():
-        for node_id in node_ids:
-            matched_by[node_id].add(pattern)
-    unmatched = frozenset(
-        pattern
-        for pattern, node_ids in collected_by_pattern.items()
-        if len(node_ids) == 0
+    unmatched, overlapping, uncollected = _find_partition_problems(
+        collected_by_pattern=collected_by_pattern,
+        full_suite=full_suite,
     )
-    overlapping = {
-        node_id: frozenset(matched_patterns)
-        for node_id, matched_patterns in matched_by.items()
-        if len(matched_patterns) > 1
-    }
-    uncollected = full_suite.difference(matched_by)
     if len(unmatched) > 0 or len(overlapping) > 0 or len(uncollected) > 0:
         raise PartitionError(
             unmatched_patterns=unmatched,
