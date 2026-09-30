@@ -44,7 +44,7 @@ Adapt the job and matrix key names to your workflow; this repository's test job 
            check_partition(
                patterns=matrix["shard_pattern"],
                rootdir=repository_root,
-               disable_plugins=("pytest-retry", "pytest_beartype_tests"),
+               disable_plugins=("pytest-retry", "pytest_beartype"),
                extra_args=("--disable-warnings",),
            )
        except PartitionError as error:
@@ -83,7 +83,7 @@ The package reads the final ``session.items`` after collection-modification and 
 This answers what a shard will actually run, including ``-m`` filters and ``--deselect``, rather than reporting raw discovery.
 
 Outer plugins also enter nested runs and can fail or mutate them.
-In practice, callers commonly disable ``pytest-retry`` because it can raise ``ValueError: no option named 'filtered_exceptions'`` and disable ``pytest_beartype_tests`` because repeated collection can trigger `beartype issue 637`_ on Python 3.14.
+In practice, callers commonly disable ``pytest-retry`` because it can raise ``ValueError: no option named 'filtered_exceptions'`` and disable ``pytest_beartype`` to avoid decorating tests during a collection-only run.
 Disabled plugins may leave unknown ini options, so ``extra_args=("--disable-warnings",)`` is usually helpful.
 
 ``pytest-split``, ``pytest-randomly``, and ``pytest-xdist`` are disabled by default during nested collection.
@@ -96,8 +96,6 @@ Nested collection failures raise ``NestedPytestError``, which is part of the pub
 
 Usage and internal pytest failures are raised loudly.
 Only pytest's explicit ``NO_TESTS_COLLECTED`` result means that a pattern matched nothing.
-
-.. _beartype issue 637: https://github.com/beartype/beartype/issues/637
 
 When not to use this
 --------------------
