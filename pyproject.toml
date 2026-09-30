@@ -237,9 +237,9 @@ analysis.strict-equality-semantics = true
 analysis.strict-generic-narrowing = true
 
 [tool.pytest]
-ini_options.addopts = [ "--strict-markers" ]
-ini_options.xfail_strict = true
-ini_options.log_cli = true
+addopts = [ "--strict-markers" ]
+log_cli = true
+xfail_strict = true
 
 [tool.coverage]
 run.source = [ "src/", "tests/" ]
