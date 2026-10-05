@@ -11,31 +11,35 @@ One shard may need Docker, another may use secrets or a special runner, and anot
 Their patterns are a deliberate, human-owned artefact.
 Pytest, workflow linting, and coverage do not report empty, overlapping, or missing shards.
 
-The closest project is `pytest-split`_. It owns the split: users commit a ``.test_durations`` file and run ``pytest --splits N --group K``. Related tools include `pytest-shard`_ and pytest-xdist's distribution modes.
+The closest project is `pytest-split <https://pypi.org/project/pytest-split/>`__.
+It owns the split: users commit a ``.test_durations`` file and run ``pytest --splits N --group K``.
+Related tools include `pytest-shard <https://pypi.org/project/pytest-shard/>`__ and pytest-xdist's distribution modes.
 This package instead checks hand-maintained node-ID patterns without replacing them.
-
-.. _pytest-split: https://pypi.org/project/pytest-split/
-.. _pytest-shard: https://pypi.org/project/pytest-shard/
 
 Usage
 -----
 
 The motivating use case reads shard patterns from a GitHub Actions workflow.
-Install the optional YAML extra first (``pip install pytest-partition-check[yaml]``).
+Install the optional YAML extra and ``pyprojroot`` first (``pip install pytest-partition-check[yaml] pyprojroot``).
 Adapt the job and matrix key names to your workflow; this repository's test job is ``tests`` and does not expose a dedicated pattern list key, so the example below uses placeholders:
 
-.. code-block:: python
+.. code:: python
+
+   """Check that CI patterns partition the test suite."""
 
    from pathlib import Path
 
    import pytest
    import yaml
+   from pyprojroot import find_root, has_file
    from pytest_partition_check import PartitionError, check_partition
 
-   def test_ci_patterns_partition_test_suite(
-       request: pytest.FixtureRequest,
-   ) -> None:
-       repository_root = request.config.rootpath
+   def test_ci_patterns_partition_test_suite() -> None:
+       """Check the shard patterns from the CI workflow."""
+       repository_root = find_root(
+           criterion=has_file(file="pyproject.toml"),
+           start=Path(__file__).resolve(),
+       )
        workflow = repository_root / ".github" / "workflows" / "test.yml"
        config = yaml.safe_load(workflow.read_text())
        # Replace "tests" / "shard_pattern" with your job and matrix key.
@@ -56,7 +60,7 @@ In plugin mode, forward nested-collection settings with ``--partition-disable-pl
 
 A standalone check is also available:
 
-.. code-block:: console
+.. code:: console
 
    $ pytest-check-partition tests/unit tests/integration
 
@@ -65,7 +69,7 @@ The CLI merges positional patterns, ``--patterns-stdin`` lines, and ``--partitio
 
 Patterns can also be read one per line from standard input, which is useful when extracting a CI matrix from another configuration file:
 
-.. code-block:: console
+.. code:: console
 
    $ generate-patterns | pytest-check-partition --patterns-stdin
 
