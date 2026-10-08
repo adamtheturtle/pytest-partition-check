@@ -52,7 +52,7 @@ dev = [
     "mypy-pytest-parametrize==2026.10.5; python_version>='3.11'",
     "mypy-strict-kwargs==2026.8.25.1; python_version>='3.11'",
     "no-defaults==2026.9.1; python_version>='3.11'",
-    "prek==0.5.4",
+    "prek==0.5.5",
     "pydocstringformatter==1.0.0; python_version>='3.11'",
     "pydocstyle==6.3",
     "pylint[spelling]==4.1.2",
