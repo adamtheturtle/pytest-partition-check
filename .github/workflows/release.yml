@@ -30,15 +30,13 @@ jobs:
           release: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Generate release notes
+      - name: Assemble native Markdown release notes
         env:
           RELEASE: ${{ steps.calver.outputs.release }}
-        run: uv run --group=release towncrier build --draft --version "$RELEASE" >
-          release-notes.md
-      - name: Update changelog
-        env:
-          RELEASE: ${{ steps.calver.outputs.release }}
-        run: uv run --group=release towncrier build --yes --version "$RELEASE"
+        run: |
+          uv run --group=release towncrier build --yes --version "$RELEASE"
+          cp "changelog/$RELEASE.md" release-notes.md
+
       - name: Open changelog pull request
         id: changelog_pr
         env:
@@ -50,7 +48,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -B "$branch"
-          git add CHANGELOG.rst newsfragments
+          git add CHANGELOG.md changelog newsfragments
           git commit -m "Bump CHANGELOG for ${RELEASE}"
           git push -u origin "$branch" --force
           if pr_url="$(gh pr view "$branch" --json url -q .url 2>/dev/null)"; then

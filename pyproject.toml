@@ -33,7 +33,7 @@ dependencies = [
     "typing-extensions>=4.4",
 ]
 optional-dependencies.yaml = [ "pyyaml==6.0.3" ]
-urls.Changelog = "https://github.com/adamtheturtle/pytest-partition-check/blob/main/CHANGELOG.rst"
+urls.Changelog = "https://github.com/adamtheturtle/pytest-partition-check/blob/main/CHANGELOG.md"
 urls.Source = "https://github.com/adamtheturtle/pytest-partition-check"
 scripts.pytest-check-partition = "pytest_partition_check.cli:main"
 entry-points.pytest11.pytest_partition_check = "pytest_partition_check.plugin"
@@ -178,7 +178,9 @@ ignore = [
     ".git_archival.txt",
     ".prettierrc",
     ".vale.ini",
-    "CHANGELOG.rst",
+    "changelog",
+    "CHANGELOG.md",
+    "changelog/**",
     "CODE_OF_CONDUCT.rst",
     "docs",
     "docs/**",
@@ -259,18 +261,15 @@ report.exclude_also = [
 report.show_missing = true
 
 [tool.towncrier]
+# Write the same native Markdown file used by documentation and GitHub releases.
 directory = "newsfragments"
-filename = "CHANGELOG.rst"
-template = "docs/towncrier_template.rst.jinja"
-title_format = "{version}"
-issue_format = "#{issue}"
-underlines = [ "-", "~", "^" ]
-# Setting ``ignore`` makes ``towncrier build`` fail on any file in
-# the fragment directory whose suffix is not a declared fragment
-# type, instead of silently dropping it.  Only the listed
-# non-fragment files are allowed through.
+filename = "changelog/{version}.md"
+title_format = "# {version} ({project_date})"
+issue_format = "[#{issue}](https://github.com/adamtheturtle/pytest-partition-check/issues/{issue})"
+single_file = false
+# Reject invalid fragment names instead of silently losing release entries.
 ignore = [ ".gitkeep" ]
-type = [ { directory = "change", name = "", showcontent = true } ]
+type = [ { directory = "change", name = "Changes", showcontent = true } ]
 
 [tool.pydocstringformatter]
 write = true
