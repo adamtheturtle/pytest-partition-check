@@ -27,7 +27,7 @@ classifiers = [
 ]
 dynamic = [ "version" ]
 dependencies = [
-    "beartype>=0.22.9",
+    "beartype>=0.23.0",
     "click>=8.5",
     "pytest>=8",
     "typing-extensions>=4.4",
