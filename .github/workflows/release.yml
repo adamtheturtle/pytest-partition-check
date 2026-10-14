@@ -21,7 +21,7 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: true
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: astral-sh/setup-uv@v10.3.0
       - name: Calculate calendar version
         uses: StephaneBour/actions-calver@v1.6
         id: calver
@@ -103,7 +103,7 @@ jobs:
           ref: ${{ github.event.release.tag_name }}
           fetch-depth: 0
           persist-credentials: false
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: astral-sh/setup-uv@v10.3.0
       - name: Run tests
         run: uv run --group=dev pytest -vvv --showlocals
   pypi:
@@ -119,7 +119,7 @@ jobs:
           ref: ${{ github.event.release.tag_name }}
           fetch-depth: 0
           persist-credentials: false
-      - uses: astral-sh/setup-uv@v10.2.0
+      - uses: astral-sh/setup-uv@v10.3.0
       - name: Build distributions
         run: |-
           uv build --sdist --wheel --out-dir dist/
