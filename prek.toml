@@ -119,6 +119,15 @@ hooks = [
     additional_dependencies = ["uv==0.11.7"]
   },
   {
+    id = "pyrefly-coverage",
+    name = "pyrefly coverage",
+    entry = "uv run --group=dev pyrefly coverage check --strict --fail-under 100",
+    language = "python",
+    pass_filenames = false,
+    stages = ["pre-push"],
+    additional_dependencies = ["uv==0.11.7"]
+  },
+  {
     id = "ty",
     name = "ty",
     entry = "uv run --group=dev ty check",
