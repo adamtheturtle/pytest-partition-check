@@ -44,9 +44,9 @@ class PartitionError(Exception):
         """Initialize a partition error with structured problem
         details.
         """
-        self.unmatched_patterns = unmatched_patterns
+        self.unmatched_patterns: frozenset[str] = unmatched_patterns
         self.overlapping: Mapping[str, frozenset[str]] = dict(overlapping)
-        self.uncollected = uncollected
+        self.uncollected: frozenset[str] = uncollected
         super().__init__(self.__str__())
 
     @override
