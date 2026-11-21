@@ -7,13 +7,13 @@ Why
 ---
 
 Repositories often give CI shards different responsibilities.
-One shard may need Docker, another may use secrets or a special runner, and another may be gated by a workflow condition.
+One shard may need Docker, another may use secrets or a special runner, and another may run only when a workflow condition is true.
 Their patterns are a deliberate, human-owned artefact.
 Pytest, workflow linting, and coverage do not report empty, overlapping, or missing shards.
 
 The closest project is `pytest-split <https://pypi.org/project/pytest-split/>`__.
-It owns the split: users commit a ``.test_durations`` file and run ``pytest --splits N --group K``.
-Related tools include `pytest-shard <https://pypi.org/project/pytest-shard/>`__ and pytest-xdist's distribution modes.
+For splitting, users commit a ``.test_durations`` file and run ``pytest --splits N --group K``.
+Related tools include `pytest-shard <https://pypi.org/project/pytest-shard/>`__ and the distribution modes in pytest-xdist.
 This package instead checks hand-maintained node-ID patterns without replacing them.
 
 Usage
@@ -21,7 +21,8 @@ Usage
 
 The motivating use case reads shard patterns from a GitHub Actions workflow.
 Install the optional YAML extra and ``pyprojroot`` first (``pip install pytest-partition-check[yaml] pyprojroot``).
-Adapt the job and matrix key names to your workflow; this repository's test job is ``tests`` and does not expose a dedicated pattern list key, so the example below uses placeholders:
+Adapt the job and matrix key names to your workflow.
+The example uses placeholders for the patterns in this repository's ``tests`` job:
 
 .. code:: python
 
@@ -84,10 +85,10 @@ Pass ``extra_args=("--disable-warnings",)`` when unknown.ini options from disabl
 
 Collection runs in-process through ``pytest.main --collect-only``.
 The package reads the final ``session.items`` after collection-modification and deselection hooks.
-This answers what a shard will actually run, including ``-m`` filters and ``--deselect``, rather than reporting raw discovery.
+This reports the tests selected for a shard after applying ``-m`` filters and ``--deselect``.
 
 Outer plugins also enter nested runs and can fail or mutate them.
-In practice, callers commonly disable ``pytest-retry`` because it can raise ``ValueError: no option named 'filtered_exceptions'`` and disable ``pytest_beartype`` to avoid decorating tests during a collection-only run.
+Callers commonly disable ``pytest-retry`` because it can raise ``ValueError: no option named 'filtered_exceptions'`` and disable ``pytest_beartype`` to avoid decorating tests during a collection-only run.
 Disabled plugins may leave unknown ini options, so ``extra_args=("--disable-warnings",)`` is usually helpful.
 
 ``pytest-split``, ``pytest-randomly``, and ``pytest-xdist`` are disabled by default during nested collection.
@@ -99,7 +100,7 @@ To opt out of a default plugin disable, reload it later in the nested argv, for 
 Nested collection failures raise ``NestedPytestError``, which is part of the public API alongside ``PartitionError``.
 
 Usage and internal pytest failures are raised loudly.
-Only pytest's explicit ``NO_TESTS_COLLECTED`` result means that a pattern matched nothing.
+The checker treats a pattern as unmatched only when pytest reports ``NO_TESTS_COLLECTED``.
 
 When not to use this
 --------------------
