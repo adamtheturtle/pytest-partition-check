@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import shlex
+from collections.abc import Iterable, Mapping
 from pathlib import Path
+from typing import TypeGuard
 
 import pytest
 from _pytest.terminal import TerminalReporter
@@ -24,7 +26,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
     group.addoption(
         "--check-partition",
         action="append",
-        default=[],
+        default=None,
         metavar="PATTERN",
         help="Check that repeatable PATTERN values partition the test suite.",
     )
@@ -42,14 +44,14 @@ def pytest_addoption(parser: pytest.Parser) -> None:
     group.addoption(
         "--partition-disable-plugin",
         action="append",
-        default=[],
+        default=None,
         metavar="NAME",
         help="Disable NAME during nested partition collection.",
     )
     group.addoption(
         "--partition-extra-arg",
         action="append",
-        default=[],
+        default=None,
         metavar="ARG",
         help="Forward ARG to nested partition collection.",
     )
@@ -65,13 +67,26 @@ def pytest_addoption(parser: pytest.Parser) -> None:
     )
 
 
+def _is_iterable(value: object, /) -> TypeGuard[Iterable[object]]:
+    """Recognize the values of a repeatable pytest option."""
+    return isinstance(value, Iterable)
+
+
+def _repeatable_option(*, config: pytest.Config, name: str) -> tuple[str, ...]:
+    """Read the ordered values of a repeatable option."""
+    value: object = config.getoption(name=name)
+    if _is_iterable(value):
+        return tuple(str(object=item) for item in value)
+    return ()
+
+
 @beartype
 def _patterns(*, config: pytest.Config) -> tuple[str, ...]:
     """Return patterns configured on the command line or in a file."""
-    direct_value = config.getoption(name="check_partition")
-    direct = tuple(str(object=value) for value in direct_value or ())
-    cli_path_value = config.getoption(name="partition_patterns_path")
-    ini_path = str(object=config.getini(name="partition_patterns_path"))
+    direct = _repeatable_option(config=config, name="check_partition")
+    cli_path_value: object = config.getoption(name="partition_patterns_path")
+    ini_path_value: object = config.getini(name="partition_patterns_path")
+    ini_path = str(object=ini_path_value)
     if cli_path_value is not None and cli_path_value != "":
         path_value = str(object=cli_path_value)
     else:
@@ -95,15 +110,17 @@ def _patterns(*, config: pytest.Config) -> tuple[str, ...]:
 @beartype
 def _disable_plugins(*, config: pytest.Config) -> tuple[str, ...]:
     """Return plugins to disable during nested collection."""
-    cli_value = config.getoption(name="partition_disable_plugin")
-    ini_value = str(object=config.getini(name="partition_disable_plugins"))
+    cli_value = _repeatable_option(
+        config=config, name="partition_disable_plugin"
+    )
+    ini_value: object = config.getini(name="partition_disable_plugins")
     ini_plugins = tuple(
         part.strip()
         for part in str(object=ini_value).split(sep=",")
         if part.strip() != ""
     )
     return (
-        *(str(object=value) for value in cli_value or ()),
+        *cli_value,
         *ini_plugins,
     )
 
@@ -111,13 +128,14 @@ def _disable_plugins(*, config: pytest.Config) -> tuple[str, ...]:
 @beartype
 def _extra_args(*, config: pytest.Config) -> tuple[str, ...]:
     """Return extra args for nested collection."""
-    cli_value = config.getoption(name="partition_extra_arg")
-    ini_value = str(object=config.getini(name="partition_extra_args"))
+    cli_value = _repeatable_option(config=config, name="partition_extra_arg")
+    ini_option: object = config.getini(name="partition_extra_args")
+    ini_value = str(object=ini_option)
     ini_args = (
         tuple(shlex.split(s=str(object=ini_value))) if ini_value != "" else ()
     )
     return (
-        *(str(object=value) for value in cli_value or ()),
+        *cli_value,
         *ini_args,
     )
 
@@ -127,7 +145,8 @@ def pytest_sessionfinish(
     session: pytest.Session, exitstatus: int | pytest.ExitCode
 ) -> None:
     """Check the configured partition after the outer session finishes."""
-    if session.config.option.collectonly:
+    options: Mapping[str, object] = vars(session.config.option)
+    if options.get("collectonly") is True:
         return
     if exitstatus not in {0, pytest.ExitCode.OK}:
         return
