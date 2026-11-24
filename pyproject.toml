@@ -33,7 +33,7 @@ dependencies = [
     "pytest>=8",
     "typing-extensions>=4.4",
 ]
-optional-dependencies.yaml = [ "pyyaml==6.0.3" ]
+optional-dependencies.yaml = [ "pyyaml==6.0.4" ]
 urls.Changelog = "https://github.com/adamtheturtle/pytest-partition-check/blob/main/CHANGELOG.md"
 urls.Source = "https://github.com/adamtheturtle/pytest-partition-check"
 scripts.pytest-check-partition = "pytest_partition_check.cli:main"
