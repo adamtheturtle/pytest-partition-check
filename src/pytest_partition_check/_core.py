@@ -7,6 +7,7 @@ import threading
 from collections import Counter, defaultdict
 from collections.abc import Iterable, Mapping
 from pathlib import Path
+from typing import Protocol, runtime_checkable
 
 import pytest
 from beartype import beartype
@@ -20,6 +21,16 @@ _COLLECTION_MUTATING_PLUGINS = (
 )
 
 _CHDIR_LOCK = threading.Lock()
+
+
+@runtime_checkable
+class _NamedExitCode(Protocol):
+    """An exit code with a name suitable for diagnostics."""
+
+    @property
+    def name(self) -> object:
+        """Return the name assigned to the exit code."""
+        ...
 
 
 class NestedPytestError(RuntimeError):
@@ -169,9 +180,10 @@ def collect_node_ids(
     if exit_code in normal_codes or unmatched_selector:
         return recorder.node_ids
     display_pattern = "." if pattern is None else pattern
+    named_exit: _NamedExitCode = exit_code
     message = (
         "Nested pytest collection failed for pattern "
-        f"{display_pattern!r} with exit code {exit_code.name} "
+        f"{display_pattern!r} with exit code {named_exit.name} "
         f"({int(exit_code)})."
     )
     raise NestedPytestError(message)
